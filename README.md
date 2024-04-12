@@ -32,7 +32,6 @@ To run Store Hunt locally, follow these steps:
    - Create a `.env` file in the root directory
    - Add the following environment variables:
      ```
-     PORT=3000
      JWT_SECRET=your_secret_key
      STRIPE_SECRET_KEY=your_stripe_secret_key
      PAYPAL_CLIENT_ID=your_paypal_client_id
