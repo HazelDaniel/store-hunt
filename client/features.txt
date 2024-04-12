@@ -1,0 +1,50 @@
+we implement a customer page so that we can have customer specific interactions:
+	other users can:
+		report
+		buy from
+		view all product of
+	a specific customer
+
+we implement a dashboard page so that every customer can have full control and oversight on their product
+  users can:
+		set payment method [not yet]
+		view their products
+		add new products
+		make draft products
+		edit existing products
+		change their credentials
+
+we implement a blog page. where both users and storeHunt can upload contents
+every product will have these fields:
+
+	seller
+	is_main
+	image_url
+	variants
+	status
+	created_at
+	id
+	description
+	descriptionHTML
+	product_type
+	published_at
+	category
+	tags
+	title
+	updated_at
+	quantity
+
+
+
+//DATA
+User:
+	every signed in user should have:
+		username
+		email
+		about
+		address
+		country
+		billing information
+		shipping information
+NOTE:		user preference should be stored in a cookie. E.g when the user logs in, if his/her preferred currency is set to niara, we convert every price to their naria equivalent
+	

@@ -1,0 +1,18 @@
+/
+/shop
+/shop/:product_id
+/auth
+/blog
+/contact
+/shopping_cart
+/wishlist
+/seller
+
+//protected routes
+/dashboard
+/dashboard/profile
+/dashboard/my_collections
+/dashboad/my_wishlists
+/dashboard/orders
+/dashboard/customers
+/dashboard/payment_option
