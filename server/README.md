@@ -1,3 +1,1 @@
-> What does this one do?
-
-THE BACKEND FILES FOR THE ENTIRE INFRASTRUCTURE
+This is the backend service of the store_hunts application
