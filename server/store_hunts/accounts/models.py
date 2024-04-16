@@ -4,6 +4,7 @@ from django.db.models.manager import BaseManager
 from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin)
 import typing as t
 import uuid
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 # Create your models here.
 
@@ -28,6 +29,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name: str = models.CharField(max_length=50, null=False)
     email: str = models.CharField(max_length=100, null=False, unique=True)
     last_name: str = models.CharField(max_length=50, null=False)
+    # profile : str = models.ImageField(uplooad_to=, blank=True, null=True)
     created_at: datetime = models.DateTimeField(auto_now_add=True)
     updated_at: datetime =  models.DateTimeField(auto_now=True)
     is_superuser: bool = models.BooleanField(default=False)
@@ -49,6 +51,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_superuser(self) -> bool:
         return self.is_superuser
+
+        
+    def get_token(self):
+        token = RefreshToken().for_user(self)
+        return (str(token.access_token))
 
         
     class Meta:
