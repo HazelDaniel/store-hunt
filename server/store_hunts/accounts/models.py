@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.db import models
-from django.db.models.manager import BaseManager
-from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin)
+# from django.db.models.manager import BaseManager
+from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin, BaseUserManager)
 import typing as t
 import uuid
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 
-class UserBaseManager(BaseManager):
+class UserBaseManager(BaseUserManager):
     def create_user(self, email: str, password : t.Optional[str] = None, **kwargs : dict) -> User:
         if not email:
             raise ValueError("User must have email address")
@@ -18,10 +18,22 @@ class UserBaseManager(BaseManager):
         user.save(using=self._db)
         return user
     
-    def create_superuser(self, email: str, password: str, **extrafields: dict) -> User:
-        extrafields.setdefault('is_superuser', True)
-        extrafields.setdefault('is_staff', True)
-        return self.create_user(email, password, **extrafields)
+    def create_superuser(self, email: str, password: str, **extra_fields: dict) -> User:
+        extra_fields.setdefault('superuser', True)
+        extra_fields.setdefault('staff', True)
+        extra_fields.setdefault('is_active', True)
+        if not extra_fields.get('superuser'):
+            raise ValueError('User must have is is_superuser attribute')
+        if not extra_fields.get('staff'):
+            raise ValueError('User must have is is_staff attribute')
+        return self.create_user(email, password, **extra_fields)
+
+    def create_staffuser(self, email: str, password : str, **extra_fields: dict) -> User:
+        extra_fields.setdefault('staff', True)
+        extra_fields.setdefault('is_active', True)
+        if not extra_fields.get('staff'):
+            raise ValueError('is_staff must be True')
+        return self.create_user(email, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -29,28 +41,35 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name: str = models.CharField(max_length=50, null=False)
     email: str = models.CharField(max_length=100, null=False, unique=True)
     last_name: str = models.CharField(max_length=50, null=False)
-    # profile : str = models.ImageField(uplooad_to=, blank=True, null=True)
     created_at: datetime = models.DateTimeField(auto_now_add=True)
+    profile_pic = models.ImageField(upload_to='profile_pic/%Y/%m/%d/', blank=True, null=True)
     updated_at: datetime =  models.DateTimeField(auto_now=True)
-    is_superuser: bool = models.BooleanField(default=False)
+    superuser: bool = models.BooleanField(default=False)
     is_active: bool = models.BooleanField(default=False)
     is_seller: bool = models.BooleanField(default=False)
+    staff: bool = models.BooleanField(default=False)
     USERNAME_FIELD: str = 'email'
     REQUIRED_FIELDS: list[str] = ['first_name', 'last_name']
+
+    objects = UserBaseManager()
 
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}"
     
     def get_name(self) -> str:
         return f"{self.first_name} {self.last_name}" 
-    
+
     @property
-    def is_seller(self) -> bool:
+    def seller_status(self):
         return self.is_seller
 
     @property
-    def is_superuser(self) -> bool:
-        return self.is_superuser
+    def is_superuser(self):
+        return self.superuser
+
+    @property
+    def is_staff(self):  # Rename the property to avoid conflicts
+        return self.staff    
 
         
     def get_token(self):

@@ -10,7 +10,8 @@ from .utils import generate_token, send_email
 from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeError
 from django.conf import settings
 from django.contrib.auth import get_user_model
-# Create your views here.
+# from .models import User
+
 User = get_user_model()
 
 
@@ -27,7 +28,7 @@ class UserRegistrationAPIView(CreateAPIView):
             user =  User.objects.create(**data)
             user.save()
             context = {
-                'domain': '127.0.0.1:8000',
+                'domain': 'localhost:8000',
                 'uid64': urlsafe_base64_encode(force_bytes(user.id)),
                 'token': generate_token.make_token(user),
                 'name': user.get_name()
@@ -51,13 +52,15 @@ class ActivateAccountApiView(views.View):
         try:
             uid=force_text(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
+            if user.is_active:
+                message = {'details': 'User account already activated'}
+                return Response(message, status=status.HTTP_400_BAD_REQUEST)
         except Exception as identifier:
+            print(identifier)
             user = None 
-        
-        if user.is_active:
-            message = {'details': 'User account already activated'}
-            return Response(message, status=status.HTTP_400_BAD_REQUEST)
-        if user and generate_token.check_token(token, user):
+
+        if user is not None and generate_token.check_token(user, token):
+            print(user)
             user.is_active = True
             user.save()
             message = {'details': 'Account has been activated successfully you can proceed to login'}
