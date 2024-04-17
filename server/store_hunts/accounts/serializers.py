@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
+
 
 
 User = get_user_model()
@@ -27,10 +27,3 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         
         return data
     
-    def create(self, validated_data):
-        password = validated_data.pop('confirm_password')
-        validated_data['password'] = make_password(password)
-        user = User.objects.create(**validated_data)
-        user.save()
-        #TODO send email
-        return user 

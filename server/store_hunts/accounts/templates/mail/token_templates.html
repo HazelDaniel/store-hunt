@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email verification</title>
+</head>
+<body>
+    <h1>Verification Email</h1>
+
+    <p>Hi {{ name }}</p>
+    <p>please clickk this link below to verify your account</p>
+    http://{{ domain }}{% url 'activate' uidb64=uid64 token=token %}
+
+    <p>This regard this link if you do not request for its</p>
+</body>
+</html>
