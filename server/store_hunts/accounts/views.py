@@ -15,10 +15,8 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-
 class UserRegistrationAPIView(CreateAPIView):
     serializer_class = UserRegistrationSerializer
-
     def create(self, request, *args, **kwargs):
         serialized = self.get_serializer(data=request.data)
         if serialized.is_valid(raise_exception=True):
@@ -33,8 +31,10 @@ class UserRegistrationAPIView(CreateAPIView):
                 'token': generate_token.make_token(user),
                 'name': user.get_name()
             }
+            subject = 'Verification Email'
             send_email(
-                'store_hunt@store.com',
+                subject,
+                'support@storehunt.com',
                 user.email,
                 context
             )
@@ -64,4 +64,4 @@ class ActivateAccountApiView(views.View):
             user.is_active = True
             user.save()
             message = {'details': 'Account has been activated successfully you can proceed to login'}
-            return Response(message, status=status.HTTP_200_OK)
+            return render(request, 'activate.html')
