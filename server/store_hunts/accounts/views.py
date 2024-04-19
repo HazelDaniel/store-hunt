@@ -65,3 +65,7 @@ class ActivateAccountApiView(views.View):
             user.save()
             message = {'details': 'Account has been activated successfully you can proceed to login'}
             return render(request, 'activate.html')
+
+
+class UserLoginAPIView(CreateAPIView):
+    ...

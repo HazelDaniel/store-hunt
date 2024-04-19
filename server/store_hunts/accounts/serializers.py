@@ -26,4 +26,27 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('confirm password must be the same as password')
         
         return data
-    
+
+
+
+class UserLoginView(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='get_name', read_only=True)
+    class Meta:
+        models = User
+        fields = (
+            'id',
+            'email',
+            'password',
+            'is_superuser',
+            'is_seller',
+            
+        )
+        extra_kwargs = {
+            'password' : {'write_only':True, 'required': True},
+            'email': {'required': True},
+            'id': {'read_only': True},
+            'is_superuser': {'read_only': True},
+            'is_seller': {'read_only': True},
+            'created_at': {'read_only': True},
+            'profile_pic': {'read_only': True}
+        } 
