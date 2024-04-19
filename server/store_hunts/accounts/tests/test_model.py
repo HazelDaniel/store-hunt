@@ -22,6 +22,8 @@ class CustomUserModelTest(TestCase):
         self.assertEqual(user.first_name, self.user_data['first_name'])
         self.assertEqual(user.last_name, self.user_data['last_name'])
         self.assertFalse(user.is_active)
+        full_name = self.user_data['first_name'] + ' ' + self.user_data['last_name']
+        self.assertEqual(user.get_name(), full_name)
         
         try:
             self.assertIsNone(user.username)
@@ -69,6 +71,8 @@ class CustomUserModelTest(TestCase):
         self.assertEqual(user.last_name, self.user_data['last_name'])
         self.assertFalse(user.is_active)
         self.assertTrue(user.is_seller)
+        full_name = self.user_data['first_name'] + ' ' + self.user_data['last_name']
+        self.assertEqual(user.get_name(), full_name)
         try:
             self.assertIsNone(user.username)
         except AttributeError:
