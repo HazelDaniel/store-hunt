@@ -71,16 +71,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     def is_staff(self):  # Rename the property to avoid conflicts
         return self.staff    
 
-        
+ 
     def get_token(self):
         token = RefreshToken().for_user(self)
-        return (str(token.access_token))
-
+        return {
+            'refresh': str(token),
+            'access': str(token.access_token)
+        }
         
     class Meta:
         db_table: str = 'users'
-    
-    
+ 
 
 class Buyer(models.Model):
     id: uuid = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)

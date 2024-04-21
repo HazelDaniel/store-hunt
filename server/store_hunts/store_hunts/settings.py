@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-
+    'drf_yasg',
+    "corsheaders",
     # social auth setup
 
     #internal applications
@@ -60,12 +61,12 @@ django.utils.encoding.force_text = force_str
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    
+    "django.middleware.clickjacking.XFrameOptionsMiddleware", 
 ]
 
 ROOT_URLCONF = "store_hunts.urls"
@@ -190,3 +191,5 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+CORS_ORIGIN_ALLOW_ALL = True

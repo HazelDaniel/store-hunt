@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from rest_framework.generics import CreateAPIView
-from .serializers import UserRegistrationSerializer
+from rest_framework import generics
+from .serializers import UserRegistrationSerializer, UserLoginSerializer, LogOutSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import views
@@ -10,12 +10,15 @@ from .utils import generate_token, send_email
 from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeError
 from django.conf import settings
 from django.contrib.auth import get_user_model
-# from .models import User
+from rest_framework import permissions
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from django.contrib import auth
+from rest_framework.exceptions import AuthenticationFailed
 
 User = get_user_model()
 
 
-class UserRegistrationAPIView(CreateAPIView):
+class UserRegistrationAPIView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
     def create(self, request, *args, **kwargs):
         serialized = self.get_serializer(data=request.data)
@@ -60,12 +63,35 @@ class ActivateAccountApiView(views.View):
             user = None 
 
         if user is not None and generate_token.check_token(user, token):
-            print(user)
             user.is_active = True
             user.save()
             message = {'details': 'Account has been activated successfully you can proceed to login'}
             return render(request, 'activate.html')
 
 
-class UserLoginAPIView(CreateAPIView):
-    ...
+class UserLoginAPIView(generics.GenericAPIView):
+    serializer_class = UserLoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        print(serializer.validated_data)
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+    
+
+ 
+class LogOutAPIView(generics.GenericAPIView):
+    serializer_class = LogOutSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    
+    def post(self, request):
+        serializer = self.get_serializer(request=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            token = RefreshToken(serializer.data.get('refresh_token'))
+            token.blacklist()
+        except TokenError:
+            return Response({'detail': 'Invalid TOken'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
