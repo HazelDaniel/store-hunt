@@ -1,0 +1,1 @@
+import{h as o,F as c,j as e}from"./index.ddc19423.js";const p=t=>{const{label:n,name:r,type:s,id:a,placeholder:l,$variant:m}=t;return o(c,{children:[e("label",{htmlFor:a,children:n}),e("input",{type:s,name:r||"",id:a,placeholder:l,className:m})]})};export{p as CustomInput};
