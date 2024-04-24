@@ -8,7 +8,6 @@ from rest_framework.exceptions import AuthenticationFailed
 User = get_user_model()
 class UserRegistrationSerializer(serializers.ModelSerializer):
     confirm_password: str = serializers.CharField(write_only=True, required=True)
-    #token = serializers.CharField(source='get_token', read_only=True)
     class Meta:
         model = User
         fields =  [
@@ -17,7 +16,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'email',
             'password',
             'confirm_password',
-            #'token'
         ]
         extra_kwargs = {
             'password' : {'write_only': True, 'required': True}
@@ -66,6 +64,3 @@ class UserLoginSerializer(serializers.Serializer):
 class LogOutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField(help_text='takes in refresh token for black list')
     
-    def validate(self, data):
-        pass
-        

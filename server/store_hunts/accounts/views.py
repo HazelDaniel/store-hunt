@@ -45,7 +45,6 @@ class UserRegistrationAPIView(generics.CreateAPIView):
                 {
                     'status' : 201,
                     'full_name' : user.get_name(),
-                    'token': user.get_token()
                 },
                 status=status.HTTP_201_CREATED
             )

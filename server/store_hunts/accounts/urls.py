@@ -8,15 +8,15 @@ from rest_framework_simplejwt.views import (
 
 
 urlpatterns = [
-     path('auth/signup',
+     path('signup',
          views.UserRegistrationAPIView.as_view(),
          name='user_registration'
     ),
      path('account/activate/<str:uidb64>/<str:token>',
          views.ActivateAccountApiView.as_view(),
          name='activate'),
-     path('auth/login', views.UserLoginAPIView.as_view(), name='login'),
-     path('auth/logout', views.LogOutAPIView.as_view(), name='logout'),
+     path('login', views.UserLoginAPIView.as_view(), name='login'),
+     path('logout', views.LogOutAPIView.as_view(), name='logout'),
      # rest_framework api token
     #  path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     #  path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

@@ -3,7 +3,6 @@ from django.db import models
 # from django.db.models.manager import BaseManager
 from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin, BaseUserManager)
 import typing as t
-import uuid
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 # Create your models here.
@@ -37,7 +36,6 @@ class UserBaseManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    id: uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True, editable=False)
     first_name: str = models.CharField(max_length=50, null=False)
     email: str = models.CharField(max_length=100, null=False, unique=True)
     last_name: str = models.CharField(max_length=50, null=False)
@@ -84,24 +82,20 @@ class User(AbstractBaseUser, PermissionsMixin):
  
 
 class Buyer(models.Model):
-    id: uuid = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
-    customer_id: uuid =  models.OneToOneField(User, related_name='buyer', on_delete=models.CASCADE)
+    customer_id =  models.OneToOneField(User, related_name='buyer', on_delete=models.CASCADE)
     
     # additional data required for the buyer will be provided
     class Meta:
         db_table: str = 'buyers'
         
 
-class Sellers(models.Model):
-    id: uuid  = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
-    customer_id: uuid  =  models.OneToOneField(User, related_name='seller', on_delete=models.CASCADE)
-    
-    # additional data required for the seller will be provided
-    class Meta:
-        db_table = 'sellers'
+# class Sellers(models.Model):
+#     customer_id  =  models.OneToOneField(User, related_name='seller', on_delete=models.CASCADE) 
+#     # additional data required for the seller will be provided
+#     class Meta:
+#         db_table = 'sellers'
 
 class Address(models.Model):
-    id: uuid = models.UUIDField(primary_key=True, default=uuid.uuid4(), unique=True, editable=False)
     state: str = models.CharField(max_length=10, null=False)
     city: str = models.CharField(max_length=20, null=False)
     postal_code: int = models.IntegerField()
@@ -114,8 +108,8 @@ class Address(models.Model):
 
 
 class CustomerAddress(models.Model):
-    address: uuid = models.ForeignKey(User, on_delete=models.CASCADE)
-    user: uuid = models.ForeignKey(Address, on_delete=models.CASCADE)
+    address = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(Address, on_delete=models.CASCADE)
 
     class Meta:
         db_table: str = 'customer_address'
