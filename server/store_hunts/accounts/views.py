@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework import generics
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, LogOutSerializer
+from .serializers import (UserRegistrationSerializer, UserLoginSerializer,
+                          LogOutSerializer, SellerRegistrationSerializer)
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import views
@@ -14,6 +15,7 @@ from rest_framework import permissions
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
+from .models import Sellers, Buyer
 
 User = get_user_model()
 
@@ -27,12 +29,15 @@ class UserRegistrationAPIView(generics.CreateAPIView):
             confirm_password = data.pop('confirm_password')
             data['password'] = make_password(confirm_password)
             user =  User.objects.create(**data)
+            buyer = Buyer.objects.create(buyer=user)
             user.save()
+            buyer.save()
             context = {
                 'domain': 'localhost:8000',
                 'uid64': urlsafe_base64_encode(force_bytes(user.id)),
                 'token': generate_token.make_token(user),
-                'name': user.get_name()
+                'name': user.get_name(),
+                'user': user.seller
             }
             subject = 'Verification Email'
             send_email(
@@ -48,7 +53,44 @@ class UserRegistrationAPIView(generics.CreateAPIView):
                 },
                 status=status.HTTP_201_CREATED
             )
-    
+
+
+class SellerRegistrationAPIView(generics.CreateAPIView):
+    serializer_class = SellerRegistrationSerializer
+    def create(self, request, *args, **kwargs):
+        serialized = self.get_serializer(data=request.data)
+        if serialized.is_valid(raise_exception=True):
+            data =  serialized.validated_data['user_registration_serializer']
+            confirm_password = data.pop('confirm_password')
+            data['password'] = make_password(confirm_password)
+            number = serialized.validated_data['phone_number']
+            user =  User(**data)
+            user.is_seller = True
+            seller = Sellers(seller=user, phone_number=number)
+            user.save()
+            seller.save()
+            context = {
+                'domain': 'localhost:8000',
+                'uid64': urlsafe_base64_encode(force_bytes(user.id)),
+                'token': generate_token.make_token(user),
+                'name': user.get_name(),
+                'seller': user.is_seller
+            }
+            subject = 'Verification Email'
+            send_email(
+                subject,
+                'support@storehunt.com',
+                user.email,
+                context
+            )
+            return Response(
+                {
+                    'status' : 201,
+                    'full_name' : user.get_name(),
+                },
+                status=status.HTTP_201_CREATED
+            )
+
 class ActivateAccountApiView(views.View):
     def get(self, request, uidb64, token):
         try:

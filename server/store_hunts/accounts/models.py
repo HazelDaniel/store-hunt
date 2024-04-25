@@ -5,6 +5,8 @@ from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin, Base
 import typing as t
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
+import re
+from .utils import validate_phone_number
 # Create your models here.
 
 
@@ -82,18 +84,18 @@ class User(AbstractBaseUser, PermissionsMixin):
  
 
 class Buyer(models.Model):
-    customer_id =  models.OneToOneField(User, related_name='buyer', on_delete=models.CASCADE)
-    
+    buyer=  models.OneToOneField(User, related_name='buyer', on_delete=models.CASCADE) 
     # additional data required for the buyer will be provided
     class Meta:
         db_table: str = 'buyers'
         
 
-# class Sellers(models.Model):
-#     customer_id  =  models.OneToOneField(User, related_name='seller', on_delete=models.CASCADE) 
-#     # additional data required for the seller will be provided
-#     class Meta:
-#         db_table = 'sellers'
+class Sellers(models.Model):
+    phone_number = models.CharField(validators= [validate_phone_number], unique=True)
+    seller  =  models.OneToOneField(User, related_name='seller', on_delete=models.CASCADE) 
+    # additional data required for the seller will be provided
+    class Meta:
+        db_table = 'sellers'
 
 class Address(models.Model):
     state: str = models.CharField(max_length=10, null=False)

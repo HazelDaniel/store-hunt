@@ -12,6 +12,9 @@ urlpatterns = [
          views.UserRegistrationAPIView.as_view(),
          name='user_registration'
     ),
+    path('seller-central/signup',
+         views.SellerRegistrationAPIView.as_view(),
+         name='seller_registration'),
      path('account/activate/<str:uidb64>/<str:token>',
          views.ActivateAccountApiView.as_view(),
          name='activate'),

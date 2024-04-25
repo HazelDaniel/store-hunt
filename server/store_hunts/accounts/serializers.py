@@ -4,8 +4,12 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
+from .models import Sellers
+from .utils import validate_phone_number
+
 
 User = get_user_model()
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     confirm_password: str = serializers.CharField(write_only=True, required=True)
     class Meta:
@@ -27,6 +31,26 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return data
 
 
+class SellerRegistrationSerializer(serializers.ModelSerializer):
+    user_registration_serializer = UserRegistrationSerializer()
+    phone_number = serializers.CharField(validators=[validate_phone_number])
+    class Meta:
+        model = Sellers
+        fields =  [
+            'user_registration_serializer',
+            'phone_number',
+        ]
+        extra_kwargs = {
+            'password' : {'write_only': True, 'required': True}
+        }
+    def validate(self, data: dict) -> dict:
+        key = 'user_registration_serializer'
+        print(data[key])
+        if data[key]['password'] != data[key]['confirm_password']:
+            raise serializers.ValidationError('confirm password must be the same as password')        
+        return data
+
+
 class UserLoginSerializer(serializers.Serializer):
     email: str = serializers.EmailField(required=True)
     password: str = serializers.CharField(write_only=True, required=True)
@@ -36,7 +60,6 @@ class UserLoginSerializer(serializers.Serializer):
         email = data.get('email', '')
         password = data.get('password', '')
         user  = auth.authenticate(email=email, password=password) 
-        print(user)
         if not user:
             raise AuthenticationFailed(
                 "Invalid email or password"
@@ -63,4 +86,4 @@ class UserLoginSerializer(serializers.Serializer):
 
 class LogOutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField(help_text='takes in refresh token for black list')
-    
+ 
