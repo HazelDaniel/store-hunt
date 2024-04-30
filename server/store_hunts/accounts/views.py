@@ -1,13 +1,18 @@
+import uuid
+
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.db.models.query import QuerySet
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.encoding import DjangoUnicodeDecodeError, force_bytes, force_text
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, permissions, status, views
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.request import HttpRequest
 from rest_framework.response import Response
+from rest_framework.serializers import SerializerMetaclass
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from .models import Buyer, Sellers
@@ -24,9 +29,9 @@ User = get_user_model()
 
 
 class UserRegistrationAPIView(generics.CreateAPIView):
-    serializer_class = UserRegistrationSerializer
+    serializer_class: SerializerMetaclass = UserRegistrationSerializer
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: HttpRequest, *args: list, **kwargs: dict) -> Response:
         serialized = self.get_serializer(data=request.data)
         if serialized.is_valid(raise_exception=True):
             data = serialized.validated_data
@@ -41,7 +46,7 @@ class UserRegistrationAPIView(generics.CreateAPIView):
                 "uid64": urlsafe_base64_encode(force_bytes(user.id)),
                 "token": generate_token.make_token(user),
                 "name": user.get_name(),
-                "user": user.seller,
+                "user": user.is_seller,
             }
             subject = "Verification Email"
             send_email(subject, "support@storehunt.com", user.email, context)
@@ -55,15 +60,15 @@ class UserRegistrationAPIView(generics.CreateAPIView):
 
 
 class SellerRegistrationAPIView(generics.CreateAPIView):
-    serializer_class = SellerRegistrationSerializer
+    serializer_class: SerializerMetaclass = SellerRegistrationSerializer
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: HttpRequest, *args: list, **kwargs: dict) -> Response:
         serialized = self.get_serializer(data=request.data)
         if serialized.is_valid(raise_exception=True):
-            data = serialized.validated_data["user_registration_serializer"]
+            data = serialized.validated_data
             confirm_password = data.pop("confirm_password")
             data["password"] = make_password(confirm_password)
-            number = serialized.validated_data["phone_number"]
+            number = data.pop("phone_number")
             user = User(**data)
             user.is_seller = True
             seller = Sellers(seller=user, phone_number=number)
@@ -88,7 +93,7 @@ class SellerRegistrationAPIView(generics.CreateAPIView):
 
 
 class ActivateAccountApiView(views.View):
-    def get(self, request, uidb64, token):
+    def get(self, request: HttpRequest, uidb64: uuid, token: str) -> HttpResponse:
         try:
             uid = force_text(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
@@ -106,24 +111,25 @@ class ActivateAccountApiView(views.View):
                 "details": "Account has been activated successfully you can proceed to login"
             }
             return render(request, "activate.html")
+        else:
+            return HttpResponse("<h1>Invalid token provided</h1>")
 
 
 class UserLoginAPIView(generics.GenericAPIView):
-    serializer_class = UserLoginSerializer
+    serializer_class: SerializerMetaclass = UserLoginSerializer
 
-    def post(self, request):
+    def post(self, request: HttpRequest) -> Response:
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        print(serializer.validated_data)
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
 class LogOutAPIView(generics.GenericAPIView):
     serializer_class = LogOutSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes: list = [permissions.IsAuthenticated]
 
-    def post(self, request):
-        serializer = self.get_serializer(request=request.data)
+    def post(self, request: HttpRequest) -> Response:
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         try:
@@ -137,6 +143,6 @@ class LogOutAPIView(generics.GenericAPIView):
 
 
 class AllUserAPIView(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = RetrieveAllUserSerializer
-    permission_classes = [permissions.IsAdminUser]
+    queryset: QuerySet = User.objects.all()
+    serializer_class: SerializerMetaclass = RetrieveAllUserSerializer
+    permission_classes: list = [permissions.IsAdminUser]

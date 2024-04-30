@@ -5,6 +5,7 @@ from django.contrib import auth
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.validators import UniqueValidator
 
 from .models import Sellers
 from .utils import validate_phone_number
@@ -14,6 +15,9 @@ User = get_user_model()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     confirm_password: str = serializers.CharField(write_only=True, required=True)
+    email = serializers.EmailField(
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
 
     class Meta:
         model = User
@@ -34,26 +38,41 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return data
 
 
-class SellerRegistrationSerializer(serializers.ModelSerializer):
-    user_registration_serializer = UserRegistrationSerializer()
-    phone_number = serializers.CharField(validators=[validate_phone_number])
+class SellerRegistrationSerializer(UserRegistrationSerializer):
+    # user = UserRegistrationSerializer()
+    phone_number = serializers.CharField(
+        validators=[
+            validate_phone_number,
+            UniqueValidator(queryset=Sellers.objects.all()),
+        ]
+    )
+    first_name = serializers.CharField(max_length=50)
+    last_name = serializers.CharField(max_length=50)
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=8, max_length=100, write_only=True)
+    confirm_password = serializers.CharField(
+        min_length=8, max_length=100, write_only=True
+    )
 
     class Meta:
         model = Sellers
         fields = [
-            "user_registration_serializer",
+            "first_name",
+            "last_name",
+            "email",
             "phone_number",
+            "password",
+            "confirm_password",
         ]
-        extra_kwargs = {"password": {"write_only": True, "required": True}}
+        # extra_kwargs = {"password": {"write_only": True, "required": True}}
 
-    def validate(self, data: dict) -> dict:
-        key = "user_registration_serializer"
-        print(data[key])
-        if data[key]["password"] != data[key]["confirm_password"]:
-            raise serializers.ValidationError(
-                "confirm password must be the same as password"
-            )
-        return data
+    # def validate(self, data: dict) -> dict:
+    #     key = "user"
+    #     if data[key]["password"] != data[key]["confirm_password"]:
+    #         raise serializers.ValidationError(
+    #             "confirm password must be the same as password"
+    #         )
+    #     return data
 
 
 class UserLoginSerializer(serializers.Serializer):

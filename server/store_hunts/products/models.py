@@ -1,18 +1,20 @@
+import os
+
 from accounts.models import Sellers
 from django.db import models
-
 
 # Create your models here.
 
 
 class Brand(models.Model):
-    name = models.CharField(max_length=50, unique=True, null=True)
+    name = models.CharField(max_length=50, unique=True)
 
     class Meta:
         db_table = "brand"
-        
+
     def __str__(self):
         return self.name
+
 
 class Product(models.Model):
     name = models.CharField(max_length=50)
@@ -21,7 +23,7 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
-    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, null=True)
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, blank=True, null=True)
     seller = models.ForeignKey(Sellers, on_delete=models.CASCADE)
 
     class Meta:
@@ -33,8 +35,10 @@ class Product(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=50)
-    parent = models.ForeignKey("Category", on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=50, unique=True)
+    parent = models.ForeignKey(
+        "Category", on_delete=models.CASCADE, null=True, blank=True
+    )
     promotion = models.ManyToManyField(
         "Promotion", through="PromotionCategory", related_name="promtion_category"
     )
@@ -63,47 +67,72 @@ class Promotion(models.Model):
 
 
 class PromotionCategory(models.Model):
-    category = models.ForeignKey(Promotion, on_delete=models.CASCADE)
-    promotion = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Promotion, on_delete=models.CASCADE, null=True)
+    promotion = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = "promotion_category"
 
 
-class Size(models.Model):
-    size_option = models.CharField(
-        verbose_name="size option", help_text="user input size option"
-    )
-    
-    class Meta:
-        db_table = 'size'
-
-class Colour(models.Model):
-    colour_name = models.CharField(
-        verbose_name="colour type", help_text="color type text"
-    )
-    
-    class Meta:
-        db_table = 'colour'
-    
-    def __str__(self):
-        return self.colour_name
-
 class ProductItem(models.Model):
     qty_in_stock = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=6, decimal_places=2)
-    size = models.ForeignKey(Size, on_delete=models.CASCADE)
-    colour = models.ForeignKey(Colour, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    variation = models.ManyToManyField(
+        "VariationOption",
+        through="ProductItemVariationOption",
+        related_name="variation_product",
+    )
+
+
+def get_file_path(instance, filename):
+    return os.path.join(
+        "products", "images", instance.product_item.product.name, filename
+    )
 
 
 class Image(models.Model):
-    image = models.ImageField(upload_to="product/image/%Y/%m/%d/")
+    image = models.ImageField(upload_to=get_file_path)
     product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE)
 
     class Meta:
         db_table = "image"
-        
-        
+
     def __str__(self):
         return self.image
+
+
+class Variation(models.Model):
+    attr_name = models.CharField(
+        verbose_name="attribute name", max_length=50, unique=True
+    )
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "variation"
+
+
+class VariationOption(models.Model):
+    attr_value = models.CharField(
+        max_length=50, unique=True, help_text="variation attribute value"
+    )
+    product_item = models.ManyToManyField(
+        ProductItem,
+        through="ProductItemVariationOption",
+        related_name="variation_product",
+    )
+
+    class Meta:
+        db_table = "variation_option"
+
+
+class ProductItemVariationOption(models.Model):
+    variation_option = models.ForeignKey(
+        ProductItem, on_delete=models.CASCADE, null=True, blank=True
+    )
+    product_item = models.ForeignKey(
+        VariationOption, on_delete=models.CASCADE, null=True, blank=True
+    )
+
+    class Meta:
+        db_table = "product_variation"

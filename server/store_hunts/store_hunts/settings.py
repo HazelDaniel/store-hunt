@@ -45,8 +45,9 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-    "drf_yasg",
     "corsheaders",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     # social auth setup
     # internal applications
     "accounts",
@@ -151,9 +152,7 @@ AUTH_USER_MODEL = "accounts.User"
 
 # Configuring restframework
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
-    )
+    "DEFAULT_AUTHENTICATION_CLASSES": ("dj_rest_auth.jwt_auth.JWTCookieAuthentication",)
 }
 
 PASSWORD_HASHERS = [
@@ -182,15 +181,27 @@ SITE_ID = 1
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-    )
+    ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Store Hunts API",
+    "DESCRIPTION": "store hunts ecommerce api endpoints",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_DIST": "SIDECAR",  # shorthand to use the sidecar instead
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
+    "REDOC_DIST": "SIDECAR",
+}

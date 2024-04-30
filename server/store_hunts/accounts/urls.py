@@ -1,27 +1,31 @@
 from django.urls import include, path
-
-from . import views
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
     TokenVerifyView,
 )
 
+from . import views
+
 urlpatterns = [
-    path("signup", views.UserRegistrationAPIView.as_view(), name="user_registration"),
     path(
-        "seller-central/signup",
+        "auth/signup/",
+        views.UserRegistrationAPIView.as_view(),
+        name="user_registration",
+    ),
+    path(
+        "auth/seller-central/signup/",
         views.SellerRegistrationAPIView.as_view(),
         name="seller_registration",
     ),
     path(
-        "account/activate/<str:uidb64>/<str:token>",
+        "auth/account/activate/<str:uidb64>/<str:token>",
         views.ActivateAccountApiView.as_view(),
         name="activate",
     ),
-    path("login", views.UserLoginAPIView.as_view(), name="login"),
-    path("logout", views.LogOutAPIView.as_view(), name="logout"),
-    path("users/", views.AllUserAPIView.as_view(), name="all_user")
+    path("auth/login/", views.UserLoginAPIView.as_view(), name="login"),
+    path("auth/logout/", views.LogOutAPIView.as_view(), name="logout"),
+    path("admin/users", views.AllUserAPIView.as_view(), name="all_user"),
     # rest_framework api token
     #  path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     #  path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
