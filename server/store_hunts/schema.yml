@@ -1,0 +1,361 @@
+openapi: 3.0.3
+info:
+  title: Store Hunts API
+  version: 1.0.0
+  description: store hunts ecommerce api endpoints
+paths:
+  /api/v1/auth/login:
+    post:
+      operationId: auth_login_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLogin'
+          description: ''
+  /api/v1/auth/logout:
+    post:
+      operationId: auth_logout_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogOut'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogOut'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogOut'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogOut'
+          description: ''
+  /api/v1/auth/signup:
+    post:
+      operationId: auth_signup_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+          description: ''
+  /api/v1/auth/users/:
+    get:
+      operationId: auth_users_list
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RetrieveAllUser'
+          description: ''
+  /api/v1/seller-central/products/:
+    post:
+      operationId: seller_central_products_create
+      tags:
+      - seller-central
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCreate'
+          description: ''
+  /api/v1/seller-central/signup:
+    post:
+      operationId: seller_central_signup_create
+      tags:
+      - seller-central
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SellerRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SellerRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SellerRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerRegistration'
+          description: ''
+components:
+  schemas:
+    Brand:
+      type: object
+      properties:
+        brand:
+          type: string
+      required:
+      - brand
+    Category:
+      type: object
+      properties:
+        category:
+          type: string
+        sub_category:
+          type: array
+          items:
+            type: integer
+      required:
+      - category
+      - sub_category
+    Colour:
+      type: object
+      properties:
+        colour:
+          type: string
+      required:
+      - colour
+    Image:
+      type: object
+      properties:
+        image:
+          type: string
+          format: uri
+      required:
+      - image
+    LogOut:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          description: takes in refresh token for black list
+      required:
+      - refresh_token
+    ProductCreate:
+      type: object
+      properties:
+        category:
+          $ref: '#/components/schemas/Category'
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+        brand:
+          $ref: '#/components/schemas/Brand'
+        image:
+          $ref: '#/components/schemas/Image'
+        colour:
+          $ref: '#/components/schemas/Colour'
+        size:
+          $ref: '#/components/schemas/Size'
+        product_item:
+          $ref: '#/components/schemas/ProductItem'
+      required:
+      - brand
+      - category
+      - colour
+      - description
+      - image
+      - name
+      - product_item
+      - size
+    ProductItem:
+      type: object
+      properties:
+        quantity:
+          type: integer
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+      required:
+      - price
+      - quantity
+    RetrieveAllUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          nullable: true
+        first_name:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 50
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        profile_pic:
+          type: string
+          format: uri
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        superuser:
+          type: boolean
+        is_active:
+          type: boolean
+        is_seller:
+          type: boolean
+        staff:
+          type: boolean
+        groups:
+          type: array
+          items:
+            type: integer
+          description: The groups this user belongs to. A user will get all permissions
+            granted to each of their groups.
+        user_permissions:
+          type: array
+          items:
+            type: integer
+          description: Specific permissions for this user.
+      required:
+      - created_at
+      - email
+      - first_name
+      - id
+      - last_name
+      - updated_at
+    SellerRegistration:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserRegistration'
+        phone_number:
+          type: string
+      required:
+      - phone_number
+      - user
+    Size:
+      type: object
+      properties:
+        size:
+          type: string
+      required:
+      - size
+    UserLogin:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+        token:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - password
+      - token
+    UserRegistration:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 50
+        last_name:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+        confirm_password:
+          type: string
+          writeOnly: true
+      required:
+      - confirm_password
+      - email
+      - first_name
+      - last_name
+      - password
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
