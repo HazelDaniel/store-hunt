@@ -37,7 +37,11 @@ class Product(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
     parent = models.ForeignKey(
-        "Category", on_delete=models.CASCADE, null=True, blank=True
+        "Category",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="child",
     )
     promotion = models.ManyToManyField(
         "Promotion", through="PromotionCategory", related_name="promtion_category"
@@ -77,12 +81,17 @@ class PromotionCategory(models.Model):
 class ProductItem(models.Model):
     qty_in_stock = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=6, decimal_places=2)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="product_item"
+    )
     variation = models.ManyToManyField(
         "VariationOption",
         through="ProductItemVariationOption",
         related_name="variation_product",
     )
+
+    class Meta:
+        db_table = "product_item"
 
 
 def get_file_path(instance, filename):
@@ -93,7 +102,9 @@ def get_file_path(instance, filename):
 
 class Image(models.Model):
     image = models.ImageField(upload_to=get_file_path)
-    product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE)
+    product_item = models.ForeignKey(
+        ProductItem, on_delete=models.CASCADE, related_name="product_image"
+    )
 
     class Meta:
         db_table = "image"
@@ -121,16 +132,19 @@ class VariationOption(models.Model):
         through="ProductItemVariationOption",
         related_name="variation_product",
     )
+    variation = models.ForeignKey(
+        Variation, on_delete=models.CASCADE, related_name="variation_value"
+    )
 
     class Meta:
         db_table = "variation_option"
 
 
 class ProductItemVariationOption(models.Model):
-    variation_option = models.ForeignKey(
+    product_item = models.ForeignKey(
         ProductItem, on_delete=models.CASCADE, null=True, blank=True
     )
-    product_item = models.ForeignKey(
+    variation_option = models.ForeignKey(
         VariationOption, on_delete=models.CASCADE, null=True, blank=True
     )
 

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_recursive.fields import RecursiveField
 
 from .models import (
     Brand,
@@ -9,52 +10,6 @@ from .models import (
     Variation,
     VariationOption,
 )
-
-
-class BrandSerializer(serializers.ModelSerializer):
-    brand = serializers.CharField(source="name")
-
-    class Meta:
-        model = Brand
-        fields = ("brand",)
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    category = serializers.CharField(source="name")
-    sub_category = serializers.ListSerializer(
-        child=serializers.PrimaryKeyRelatedField(queryset=Category.objects.all()),
-        allow_empty=True,
-    )
-
-    class Meta:
-        model = Category
-        fields = ("category", "sub_category")
-
-
-class ImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Image
-        fields = ("image",)
-
-
-# class VariationSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Variation
-#         fields = ("attr_name",)
-
-
-# class VariationOptionSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = VariationOption
-#         fields = ("attr_value",)
-
-
-class ProductItemSerializer(serializers.ModelSerializer):
-    quantity = serializers.IntegerField(source="qty_in_stock")
-
-    class Meta:
-        model = ProductItem
-        fields = ("quantity", "price")
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
@@ -70,9 +25,11 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         required=True,
     )  # For accepting file uploads
     # product_item = ProductItemSerializer()
-    brand = serializers.CharField(max_length=50)
+    brand = serializers.CharField(max_length=50, required=False)
     quantity = serializers.IntegerField(min_value=0)
     price = serializers.DecimalField(max_digits=6, decimal_places=2)
+    variation = serializers.CharField(max_length=20, required=False)
+    variation_value = serializers.CharField(max_length=20, required=False)
 
     class Meta:
         model = Product
@@ -85,4 +42,84 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "brand",
             "quantity",
             "price",
+            "variation",
+            "variation_value",
         )
+
+
+class BrandSerializer(serializers.ModelSerializer):
+    brand_name = serializers.CharField(source="name")
+
+    class Meta:
+        model = Brand
+        fields = ("id", "brand_name")
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    child = RecursiveField(many=True)
+    category_name = serializers.CharField(source="name")
+
+    class Meta:
+        model = Category
+        fields = ["id", "category_name", "parent", "child"]
+
+
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image
+        fields = ["id", "image"]
+
+
+
+
+class VariationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Variation
+        fields = ["id", "attr_name"]
+
+class VariationOptionSerializer(serializers.ModelSerializer):
+    variation = VariationSerializer(read_only=True)
+    class Meta:
+        model = VariationOption
+        fields = ['variation', "id", "attr_value"]
+
+class ProductItemSerializer(serializers.ModelSerializer):
+    quantity = serializers.IntegerField(source="qty_in_stock")
+    product_image = ImageSerializer(read_only=True, many=True)
+    variation = VariationOptionSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = ProductItem
+        fields = ["id", "price", "quantity", "variation", "product_image"]
+
+
+class ListAllProductSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    brand = BrandSerializer(read_only=True)
+    product_item = ProductItemSerializer(read_only=True, many=True)
+    product_name = serializers.CharField(source="name")
+
+    class Meta:
+        model = Product
+        fields = (
+            "id",
+            "product_name",
+            "description",
+            "category",
+            "brand",
+            "product_item",
+        )
+
+
+# class ProductSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Product
+#         fields = '__all__'
+
+# class ListAllProductSerializer(serializers.ModelSerializer):
+#     product = ProductSerializer(read_only=True, many=True)
+#     child = RecursiveField(many=True)
+#     class Meta:
+#         model = Category
+#         fields = ['id', 'name', 'product', 'child']
