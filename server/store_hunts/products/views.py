@@ -96,4 +96,4 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
 
 class ListAllProductAPIView(generics.ListAPIView, SellerPermissionMixin):
     serializer_class = ListAllProductSerializer
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter()
