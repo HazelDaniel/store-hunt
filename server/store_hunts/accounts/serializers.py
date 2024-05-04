@@ -35,11 +35,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "confirm password must be the same as password"
             )
- 
-        data['first_name'] = data['first_name'].capitalize()
-        data['last_name'] = data['last_name'].capitalize()
+
+        data["first_name"] = data["first_name"].capitalize()
+        data["last_name"] = data["last_name"].capitalize()
         return data
-    
 
 
 class SellerRegistrationSerializer(UserRegistrationSerializer):

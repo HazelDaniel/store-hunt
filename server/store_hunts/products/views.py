@@ -1,3 +1,4 @@
+from django.shortcuts import get_list_or_404, get_object_or_404
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.request import HttpRequest
@@ -9,16 +10,12 @@ from .models import (
     Image,
     Product,
     ProductItem,
-    ProductItemVariationOption,
-    Variation,
-    VariationOption,
+    Size,
+    Colour,
+    ProductVariation,
 )
 from .permissions import SellerPermissionMixin
-from .serializers import (
-    ListAllProductSerializer,
-    ProductCreateSerializer,
-    ProductItemSerializer,
-)
+from .serializers import ListAllProductSerializer, ProductCreateSerializer
 
 # Create your views here.
 
@@ -32,17 +29,18 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
         if serializer.is_valid(raise_exception=True):
             print(serializer.validated_data)
             data = serializer.validated_data
-            brand = data.pop("brand", None)
+            brand = data.pop("brand")
             category = data.pop("category")
             sub_category = data.pop("sub_category")
             uploaded_images = data.pop("upload_image")
-            var_name = data.pop("variation", None)
-            var_value = data.pop("variation_value", None)
+            size = data.pop("size")
+            colour = data.pop("colour")
             product_items = {
                 "price": data.pop("price"),
                 "qty_in_stock": data.pop("quantity"),
             }
 
+            # create the parent key for the self reference
             parent_category, _ = Category.objects.get_or_create(name=category)
 
             # handle self referencing relationship  in category
@@ -52,41 +50,34 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
                 )
                 parent_category = child_category
 
-            if not brand:
-                # brand, _ = Brand.objects.get_or_create(name=brand)
-                product = Product.objects.create(
-                    **data,
-                    category=parent_category,
-                    seller=request.user.seller
-                )
-                product_item = ProductItem.objects.create(**product_items, product=product)
-            else:
-                product = Product.objects.create(
-                    **data, category=parent_category, seller=request.user.seller
-                )
-                product_item = ProductItem.objects.create(**product_items, product=product)
-
+            brand, _ = Brand.objects.get_or_create(name=brand)
+            product = Product.objects.create(
+                **data,
+                category=parent_category,
+                brand=brand,
+                seller=request.user.seller
+            )
+            colour, _ = Colour.objects.get_or_create(name=colour)
+            product_item = ProductItem.objects.create(
+                **product_items, product=product
+            )
+            # store product attribute
             # store image file pth
             for image in uploaded_images:
                 Image.objects.create(image=image, product_item=product_item)
 
-            if var_name and var_value:
-                variation, _ = Variation.objects.get_or_create(
-                    attr_name=var_name, category=parent_category
-                )
-                variation_opt, _ = VariationOption.objects.get_or_create(
-                    attr_value=var_value, variation=variation
-                )
-
-                product_item_variation = ProductItemVariationOption(
-                    variation_option=variation_opt, product_item=product_item
-                )
-                product_item_variation.save()
-
-            return Response(
-                {"detail": "product created successfully"},
-                status=status.HTTP_201_CREATED,
+            size, _ = Size.objects.get_or_create(name=size, category=parent_category)
+            product_variation = ProductVariation.objects.create(
+                colour=colour, size=size, product_item=product_item
             )
+            return Response(
+                {"status": 201, "detail": "product created successfully"},
+                status=status.HTTP_200_OK,
+            )
+        return Response(
+            {"status": 400, "detail": "product unsuccessfully"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     # def get_serializer_context(self):
     #     context = super().get_serializer_context()
@@ -96,4 +87,10 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
 
 class ListAllProductAPIView(generics.ListAPIView, SellerPermissionMixin):
     serializer_class = ListAllProductSerializer
-    queryset = Product.objects.filter()
+    queryset = Product.objects.all()
+
+    def get_queryset(self):
+        current_seller = self.request.user.seller
+        return Product.objects.filter(seller=current_seller)
+
+
