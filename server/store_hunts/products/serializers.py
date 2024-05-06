@@ -28,7 +28,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     )  # For accepting file uploads
     brand = serializers.CharField(max_length=50, required=True)
     quantity = serializers.IntegerField(min_value=0, required=True)
-    price = serializers.DecimalField(max_digits=6, decimal_places=2, required=True)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
     size = serializers.CharField(max_length=20)
     colour = serializers.CharField(max_length=20)
 
@@ -79,7 +79,7 @@ class ProductAttributeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductVariation
-        fields = ('size', 'colour')
+        fields = ("size", "colour")
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -95,28 +95,19 @@ class ImageSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     image = serializers.ImageField()
 
+
 class ProductItemSerializer(serializers.ModelSerializer):
     quantity = serializers.IntegerField(source="qty_in_stock")
-    image = ImageSerializer(source='product_image', read_only=True, many=True)
-    product_attribute= serializers.SerializerMethodField(read_only=True)
+    image = ImageSerializer(source="product_image", read_only=True, many=True)
+    product_attribute = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = ProductItem
-        fields = [
-            "id",
-            "price",
-            'quantity',
-            'product_attribute',
-            'image'
-        ]
+        fields = ["id", "price", "quantity", "product_attribute", "image"]
 
     def get_product_attribute(self, obj):
         variation = obj.variation.first()
-        return {
-            'size': variation.size.name,
-            'colour': variation.colour.name
-        }
-    
-
+        return {"size": variation.size.name, "colour": variation.colour.name}
 
 
 class ListAllProductSerializer(serializers.ModelSerializer):
@@ -135,3 +126,9 @@ class ListAllProductSerializer(serializers.ModelSerializer):
             "brand",
             "product_item",
         )
+
+
+class DestroyProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        field = '__all__'

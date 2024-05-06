@@ -119,3 +119,4 @@ class RetrieveAllUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         exclude = ["password"]
+

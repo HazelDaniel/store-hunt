@@ -25,7 +25,9 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
-    brand = models.ForeignKey(Brand, on_delete=models.PROTECT)
+    brand = models.ForeignKey(
+        Brand, on_delete=models.PROTECT, related_name="product_brand"
+    )
     seller = models.ForeignKey(Sellers, on_delete=models.CASCADE)
 
     class Meta:
@@ -81,10 +83,10 @@ class PromotionCategory(models.Model):
 
 
 class ProductItem(models.Model):
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     qty_in_stock = models.PositiveIntegerField(default=0)
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="product_item"
+        Product, on_delete=models.CASCADE, related_name="product"
     )
 
     class Meta:
@@ -129,9 +131,13 @@ class Colour(models.Model):
 
 
 class ProductVariation(models.Model):
-    size = models.ForeignKey(Size, on_delete=models.PROTECT, related_name='size')
-    colour = models.ForeignKey("Colour", on_delete=models.PROTECT, related_name='colour')
-    product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE, related_name='variation')
+    size = models.ForeignKey(Size, on_delete=models.PROTECT, related_name="size")
+    colour = models.ForeignKey(
+        "Colour", on_delete=models.PROTECT, related_name="colour"
+    )
+    product_item = models.ForeignKey(
+        ProductItem, on_delete=models.CASCADE, related_name="variation"
+    )
 
     class Meta:
         db_table = "product_variation"
