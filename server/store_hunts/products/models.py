@@ -19,11 +19,15 @@ class Brand(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField()
-    category = models.ForeignKey("Category", on_delete=models.CASCADE, related_name='product_category')
+    category = models.ForeignKey(
+        "Category", on_delete=models.PROTECT, related_name="product_category"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
-    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, blank=True, null=True)
+    brand = models.ForeignKey(
+        Brand, on_delete=models.PROTECT, related_name="product_brand"
+    )
     seller = models.ForeignKey(Sellers, on_delete=models.CASCADE)
 
     class Meta:
@@ -44,7 +48,7 @@ class Category(models.Model):
         related_name="child",
     )
     promotion = models.ManyToManyField(
-        "Promotion", through="PromotionCategory", related_name="promtion_category"
+        "Promotion", through="PromotionCategory", related_name="promotion_category"
     )
 
     class Meta:
@@ -71,23 +75,18 @@ class Promotion(models.Model):
 
 
 class PromotionCategory(models.Model):
-    category = models.ForeignKey(Promotion, on_delete=models.CASCADE, null=True)
-    promotion = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
+    promotion = models.ForeignKey(Promotion, on_delete=models.CASCADE, null=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = "promotion_category"
 
 
 class ProductItem(models.Model):
-    qty_in_stock = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    qty_in_stock = models.PositiveIntegerField(default=0)
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="product_item"
-    )
-    variation = models.ManyToManyField(
-        "VariationOption",
-        through="ProductItemVariationOption",
-        related_name="variation_product",
+        Product, on_delete=models.CASCADE, related_name="product"
     )
 
     class Meta:
@@ -113,39 +112,31 @@ class Image(models.Model):
         return self.image
 
 
-class Variation(models.Model):
-    attr_name = models.CharField(
-        verbose_name="attribute name", max_length=50, unique=True
-    )
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+class Size(models.Model):
+    name = models.CharField(max_length=10, unique=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT)
+    # sort_order = models.CharField(
+    #     min_length=1, max_length=10, help_text="Order to sort by"
+    # )
 
     class Meta:
-        db_table = "variation"
+        db_table = "size"
 
 
-class VariationOption(models.Model):
-    attr_value = models.CharField(
-        max_length=50, unique=True, help_text="variation attribute value"
-    )
-    product_item = models.ManyToManyField(
-        ProductItem,
-        through="ProductItemVariationOption",
-        related_name="variation_product",
-    )
-    variation = models.ForeignKey(
-        Variation, on_delete=models.CASCADE, related_name="variation_value"
-    )
+class Colour(models.Model):
+    name = models.CharField(max_length=10, unique=True)
 
     class Meta:
-        db_table = "variation_option"
+        db_table = "colour"
 
 
-class ProductItemVariationOption(models.Model):
+class ProductVariation(models.Model):
+    size = models.ForeignKey(Size, on_delete=models.PROTECT, related_name="size")
+    colour = models.ForeignKey(
+        "Colour", on_delete=models.PROTECT, related_name="colour"
+    )
     product_item = models.ForeignKey(
-        ProductItem, on_delete=models.CASCADE, null=True, blank=True
-    )
-    variation_option = models.ForeignKey(
-        VariationOption, on_delete=models.CASCADE, null=True, blank=True
+        ProductItem, on_delete=models.CASCADE, related_name="variation"
     )
 
     class Meta:
