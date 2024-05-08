@@ -4,7 +4,6 @@ from rest_framework_recursive.fields import RecursiveField
 from .models import (
     Brand,
     Category,
-    Image,
     Product,
     ProductItem,
     Size,
@@ -31,7 +30,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
     size = serializers.CharField(max_length=20)
     colour = serializers.CharField(max_length=20)
-
+    sex = serializers.CharField(max_length=7, help_text='choose either male or female')
     class Meta:
         model = Product
         fields = (
@@ -107,13 +106,16 @@ class ProductItemSerializer(serializers.ModelSerializer):
 
     def get_product_attribute(self, obj):
         variation = obj.variation.first()
-        return {"size": variation.size.name, "colour": variation.colour.name}
+        if variation:
+            return {"size": variation.size.name, "colour": variation.colour.name}
+        else:
+            return {'size': None, 'colour': None}
 
 
 class ListAllProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     brand = BrandSerializer(read_only=True)
-    product_item = ProductItemSerializer(read_only=True, many=True)
+    product_detail = ProductItemSerializer(read_only=True, many=True)
     product_name = serializers.CharField(source="name")
 
     class Meta:
@@ -124,7 +126,7 @@ class ListAllProductSerializer(serializers.ModelSerializer):
             "description",
             "category",
             "brand",
-            "product_item",
+            "product_detail",
         )
 
 
@@ -132,3 +134,7 @@ class DestroyProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         field = '__all__'
+
+        
+class ProductSerializer(serializers.ModelSerializer):
+    ...

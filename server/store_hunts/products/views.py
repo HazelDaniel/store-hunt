@@ -34,6 +34,7 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
             sub_category = data.pop("sub_category")
             uploaded_images = data.pop("upload_image")
             size = data.pop("size")
+            sex = data.pop('sex')
             colour = data.pop("colour")
             product_items = {
                 "price": data.pop("price"),
@@ -41,8 +42,8 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
             }
 
             # create the parent key for the self reference
-            parent_category, _ = Category.objects.get_or_create(name=category)
-
+            parent_category, _ = Category.objects.get_or_create(name=category) 
+            parent_category, _ = Category.objects.get_or_create(name=sex)
             # handle self referencing relationship  in category
             for cat in sub_category:
                 child_category, _ = Category.objects.get_or_create(
@@ -63,7 +64,6 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
             # store image file pth
             for image in uploaded_images:
                 Image.objects.create(image=image, product_item=product_item)
-
             size, _ = Size.objects.get_or_create(name=size, category=parent_category)
             product_variation = ProductVariation.objects.create(
                 colour=colour, size=size, product_item=product_item
@@ -172,7 +172,7 @@ class DestroyProductAPIView(generics.DestroyAPIView, SellerPermissionMixin):
         self.perform_destroy(product_item)
  
         return Response(status=status.HTTP_204_NO_CONTENT)
-   
+ 
     def get_queryset(self):
         seller = self.request.user.seller
         return Product.objects.filter(seller=seller)

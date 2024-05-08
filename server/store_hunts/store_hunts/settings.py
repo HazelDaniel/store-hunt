@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 from datetime import timedelta
+from .config import DB, DBUSER, PASSWORD, PORT, EMAIL_HOST, EMAIL_HOST_PASSWORD, EMAIL_HOST_USER, EMAIL_PORT, EMAIL_USE_TLS
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -98,10 +99,10 @@ WSGI_APPLICATION = "store_hunts.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB"),
-        "USER": os.environ.get("DBUSER"),
-        "PASSWORD": os.environ.get("PASSWORD"),
-        "PORT": int(os.environ.get("PORT")),
+        "NAME": DB,
+        "USER": DBUSER,
+        "PASSWORD": PASSWORD,
+        "PORT": PORT,
     }
 }
 
@@ -168,11 +169,11 @@ MEDIA_ROOT = str(BASE_DIR / "media")
 
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "localhost"
-EMAIL_PORT = "1025"
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-EMAIL_USE_TLS = False
+EMAIL_HOST = EMAIL_HOST
+EMAIL_PORT = EMAIL_PORT
+EMAIL_HOST_USER = EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
+EMAIL_USE_TLS = EMAIL_USE_TLS
 
 SITE_ID = 1
 
