@@ -11,9 +11,23 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import os
+import sys
 from datetime import timedelta
-from .config import DB, DBUSER, PASSWORD, PORT, EMAIL_HOST, EMAIL_HOST_PASSWORD, EMAIL_HOST_USER, EMAIL_PORT, EMAIL_USE_TLS
 from pathlib import Path
+
+import django
+
+from .config import (
+    DB,
+    DBUSER,
+    EMAIL_HOST,
+    EMAIL_HOST_PASSWORD,
+    EMAIL_HOST_USER,
+    EMAIL_PORT,
+    EMAIL_USE_TLS,
+    PASSWORD,
+    PORT,
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,10 +40,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEYS")
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = os.environ.get("DEBUG") == "1"
-
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -53,6 +66,9 @@ INSTALLED_APPS = [
     # internal applications
     "accounts",
     "products",
+    "shop",
+    # scrapy app
+    "productscraper",
 ]
 
 # handle force text error
@@ -206,3 +222,6 @@ SPECTACULAR_SETTINGS = {
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
     "REDOC_DIST": "SIDECAR",
 }
+
+
+# setup scrapy

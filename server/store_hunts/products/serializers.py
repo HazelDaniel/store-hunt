@@ -4,17 +4,16 @@ from rest_framework_recursive.fields import RecursiveField
 from .models import (
     Brand,
     Category,
+    Colour,
     Product,
     ProductItem,
-    Size,
-    Colour,
     ProductVariation,
+    Size,
 )
 
 
 # serializer for creating product and updating product
 class ProductCreateSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(max_length=50)
     sub_category = serializers.ListField(
         child=serializers.CharField(max_length=50), required=False
     )
@@ -30,11 +29,12 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
     size = serializers.CharField(max_length=20)
     colour = serializers.CharField(max_length=20)
-    sex = serializers.CharField(max_length=7, help_text='choose either male or female')
+    sex = serializers.CharField(max_length=7, help_text="choose either male or female")
+
     class Meta:
         model = Product
         fields = (
-            "category",
+            "sex",
             "sub_category",
             "name",
             "upload_image",  # Changed to accept file upload
@@ -56,29 +56,15 @@ class BrandSerializer(serializers.ModelSerializer):
         fields = ("id", "brand_name")
 
 
-class ColourSerializer(serializers.ModelSerializer):
-    colour_name = serializers.CharField(source="name")
-
-    class Meta:
-        model = Colour
-        fields = ("colour_name",)
-
-
-class SizeSerializer(serializers.ModelSerializer):
-    size_value = serializers.CharField(source="name")
-
-    class Meta:
-        model = Size
-        fields = ("size_value",)
-
-
-class ProductAttributeSerializer(serializers.ModelSerializer):
-    size = SizeSerializer(many=True, read_only=True)
-    colour = ColourSerializer(many=True, read_only=True)
+class ProductVariationSerializer(serializers.ModelSerializer):
+    product_variation = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductVariation
-        fields = ("size", "colour")
+        fields = "product_variation"
+
+    def get_product_variation():
+        pass
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -109,7 +95,7 @@ class ProductItemSerializer(serializers.ModelSerializer):
         if variation:
             return {"size": variation.size.name, "colour": variation.colour.name}
         else:
-            return {'size': None, 'colour': None}
+            return {"size": None, "colour": None}
 
 
 class ListAllProductSerializer(serializers.ModelSerializer):
@@ -133,8 +119,20 @@ class ListAllProductSerializer(serializers.ModelSerializer):
 class DestroyProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        field = '__all__'
+        field = "__all__"
 
-        
-class ProductSerializer(serializers.ModelSerializer):
-    ...
+
+class ProductVariationSerializer(serializers.ModelSerializer):
+    colour = serializers.CharField(max_length=10)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    quantity = serializers.IntegerField()
+    size = serializers.CharField(required=False)
+    upload_image = serializers.ListField(
+        child=serializers.ImageField(
+            max_length=10000, allow_empty_file=False, use_url=False
+        ),
+    )
+
+    class Meta:
+        model = Product
+        fields = ("colour", "price", "quantity", "size", "upload_image")

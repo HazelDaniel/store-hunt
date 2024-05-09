@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 
 from . import views
 
@@ -27,5 +27,10 @@ urlpatterns = [
         "seller-central/products/<int:id>/product-delete",
         views.DestroyProductAPIView.as_view(),
         name="update_product",
+    ),
+    path(
+        "seller-central/products/<int:id>/product-variation",
+        views.CreateProductVariationAPIView.as_view(),
+        name="product-variation",
     ),
 ]

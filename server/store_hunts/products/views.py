@@ -3,21 +3,29 @@ from rest_framework import generics, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.request import HttpRequest
 from rest_framework.response import Response
+from rest_framework.mixins import CreateModelMixin
 
 from .models import (
     Brand,
     Category,
+    Colour,
     Image,
     Product,
     ProductItem,
-    Size,
-    Colour,
     ProductVariation,
+    Size,
 )
 from .permissions import SellerPermissionMixin
-from .serializers import ListAllProductSerializer, ProductCreateSerializer, DestroyProductSerializer
+from .serializers import (
+    DestroyProductSerializer,
+    ListAllProductSerializer,
+    ProductCreateSerializer,
+    ProductVariationSerializer,
+)
 
 # Create your views here.
+
+CAT_SECTION = {"male": "Men's Fashion", "female": "Women's Fashion"}
 
 
 class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
@@ -27,23 +35,19 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
     def post(self, request: HttpRequest, *args: list, **kwargs: dict) -> Response:
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            print(serializer.validated_data)
             data = serializer.validated_data
             brand = data.pop("brand")
-            category = data.pop("category")
             sub_category = data.pop("sub_category")
             uploaded_images = data.pop("upload_image")
             size = data.pop("size")
-            sex = data.pop('sex')
+            sex = data.pop("sex").lower()
             colour = data.pop("colour")
             product_items = {
                 "price": data.pop("price"),
                 "qty_in_stock": data.pop("quantity"),
             }
-
             # create the parent key for the self reference
-            parent_category, _ = Category.objects.get_or_create(name=category) 
-            parent_category, _ = Category.objects.get_or_create(name=sex)
+            parent_category, _ = Category.objects.get_or_create(name=CAT_SECTION[sex])
             # handle self referencing relationship  in category
             for cat in sub_category:
                 child_category, _ = Category.objects.get_or_create(
@@ -64,7 +68,12 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
             # store image file pth
             for image in uploaded_images:
                 Image.objects.create(image=image, product_item=product_item)
-            size, _ = Size.objects.get_or_create(name=size, category=parent_category)
+
+            if size:
+                size = size.upper()
+                size, _ = Size.objects.get_or_create(
+                    name=size, category=parent_category
+                )
             product_variation = ProductVariation.objects.create(
                 colour=colour, size=size, product_item=product_item
             )
@@ -76,11 +85,6 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
             {"status_code": 400, "detail": "product unsuccessfully"},
             status=status.HTTP_400_BAD_REQUEST,
         )
-
-    # def get_serializer_context(self):
-    #     context = super().get_serializer_context()
-    #     context['request'] = self.request
-    #     return context
 
 
 class ListAllProductAPIView(generics.ListAPIView, SellerPermissionMixin):
@@ -117,12 +121,12 @@ class UpdateProductAPIView(generics.UpdateAPIView, SellerPermissionMixin):
             # image
             product_image = get_list_or_404(Image, product_item=product_item)
             for i in range(len(product_image)):
-                product_image[i].image = data['upload_image'][i]
+                product_image[i].image = data["upload_image"][i]
                 product_image[i].save()
 
             # TODO category
             parent_category, ca_c = Category.objects.get_or_create(
-                name=data["category"]
+                name=CAT_SECTION[data["sex"]]
             )
             sub_category = data["sub_category"]
             for cat in sub_category:
@@ -134,7 +138,11 @@ class UpdateProductAPIView(generics.UpdateAPIView, SellerPermissionMixin):
             # colour c_c stand for colour created
             colour, c_c = Colour.objects.get_or_create(name=data["colour"])
             # size s_c stand for size created
-            size, s_c = Size.objects.get_or_create(name=data["size"], category=parent_category)
+            size = data.get("size")
+            if size:
+                size, s_c = Size.objects.get_or_create(
+                    name=size.upper().upper(), category=parent_category
+                )
             p_var = get_object_or_404(ProductVariation, product_item=product_item)
             p_var.colour = colour
             p_var.size = size
@@ -154,25 +162,70 @@ class UpdateProductAPIView(generics.UpdateAPIView, SellerPermissionMixin):
 class RetrieveProductAPIView(generics.RetrieveAPIView, SellerPermissionMixin):
     serializer_class = ListAllProductSerializer
     queryset = Product.objects.all()
-    lookup_field = 'id'
+    lookup_field = "id"
 
     def get_queryset(self):
         seller = self.request.user.seller
         return Product.objects.filter(seller=seller)
-    
+
+
 class DestroyProductAPIView(generics.DestroyAPIView, SellerPermissionMixin):
     serializer_class = DestroyProductSerializer
     queryset = Product.objects.all()
-    lookup_field = 'id'
-   
+    lookup_field = "id"
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        product_item = get_object_or_404(ProductItem,product=instance)
+        product_item = get_object_or_404(ProductItem, product=instance)
         self.perform_destroy(instance)
         self.perform_destroy(product_item)
- 
+
         return Response(status=status.HTTP_204_NO_CONTENT)
- 
+
+    def get_queryset(self):
+        seller = self.request.user.seller
+        return Product.objects.filter(seller=seller)
+
+
+class CreateProductVariationAPIView(
+    generics.CreateAPIView, CreateModelMixin, SellerPermissionMixin
+):
+    serializer_class = ProductVariationSerializer
+    queryset = Product.objects.all()
+    lookup_field = "id"
+
+    def post(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.serializer_class(instance, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            create = self.perform_create(serializer)
+            return Response(
+                {"status": 201, "detail": "product variation created successfully"},
+                status=status.HTTP_201_CREATED,
+            )
+
+        return Response(
+            {"status": 400, "detail": "product variation could not be created"},
+            status=status.HTTP_201_CREATED,
+        )
+
+    def perform_create(self, serializer):
+        data = serializer.validated_data
+        instance = serializer.instance
+        product_item = ProductItem.objects.create(
+            price=data["price"], qty_in_stock=data["quantity"], product=instance
+        )
+        colour, _ = Colour.objects.get_or_create(name=data["colour"])
+        size, _ = Size.objects.get_or_create(
+            name=data.get("size").upper(), category=instance.category
+        )
+        ProductVariation.objects.create(
+            size=size, colour=colour, product_item=product_item
+        )
+
+        for image in data.get("upload_image"):
+            Image.objects.create(image=image, product_item=product_item)
+
     def get_queryset(self):
         seller = self.request.user.seller
         return Product.objects.filter(seller=seller)

@@ -1,4 +1,5 @@
 import uuid
+from sys import exit
 
 from django.conf import settings
 from django.contrib import auth
@@ -14,8 +15,9 @@ from rest_framework.request import HttpRequest
 from rest_framework.response import Response
 from rest_framework.serializers import SerializerMetaclass
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+
 from store_hunts.config import DOMAIN
-from sys import exit
+
 from .models import Buyer, Sellers
 from .serializers import (
     LogOutSerializer,
@@ -42,10 +44,9 @@ class UserRegistrationAPIView(generics.CreateAPIView):
             buyer = Buyer.objects.create(buyer=user)
             user.save()
             buyer.save()
-            
-            if not DOMAIN:
-                print('DOMAIN CANNOT BE NONE IT')
-                exit()
+
+            if DOMAIN is None:
+                raise ValueError("DOMAIN CANNOT BE NONE")
             context = {
                 "domain": DOMAIN,
                 "uid64": urlsafe_base64_encode(force_bytes(user.id)),
@@ -77,11 +78,10 @@ class SellerRegistrationAPIView(generics.CreateAPIView):
             user = User(**data)
             user.is_seller = True
             seller = Sellers(seller=user, phone_number=number)
-            seller.save()
             user.save()
-            if not DOMAIN:
-                print('DOMAIN CANNOT BE NONE IT')
-                exit()
+            seller.save()
+            if DOMAIN is None:
+                raise ValueError("DOMAIN CANNOT BE NONE")
             context = {
                 "domain": DOMAIN,
                 "uid64": urlsafe_base64_encode(force_bytes(user.id)),

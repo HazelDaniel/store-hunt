@@ -1,12 +1,14 @@
 import os
 
 from accounts.models import Sellers
-from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+
 # Create your models here.
 
 User = get_user_model()
+
 
 class Brand(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -39,6 +41,13 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    @classmethod
+    def seller_exists(cls, seller_obj):
+        return cls.objects.filter(seller=seller_obj).exists()
+
+    def product_owner(self, seller_obj):
+        return self.seller == seller_obj
+
 
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -48,9 +57,6 @@ class Category(models.Model):
         null=True,
         blank=True,
         related_name="child",
-    )
-    promotion = models.ManyToManyField(
-        "Promotion", through="PromotionCategory", related_name="promotion_category"
     )
 
     class Meta:
@@ -69,19 +75,25 @@ class Promotion(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     category = models.ManyToManyField(
-        "Category", through="PromotionCategory", related_name="promotion_category"
+        "Category",
+        through="ProductPromotionCategory",
+        related_name="promotion_category",
+    )
+    product = models.ManyToManyField(
+        Product, through="ProductPromotionCategory", related_name="promotion_product"
     )
 
     class Meta:
         db_table = "promotion"
 
 
-class PromotionCategory(models.Model):
-    promotion = models.ForeignKey(Promotion, on_delete=models.CASCADE, null=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
+class ProductPromotionCategory(models.Model):
+    promotion = models.ForeignKey(Promotion, on_delete=models.PROTECT)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
 
     class Meta:
-        db_table = "promotion_category"
+        db_table = "product_promotion_category"
 
 
 class ProductItem(models.Model):
@@ -119,7 +131,7 @@ class Size(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
 
     class Meta:
-        unique_together = ('name', 'category')
+        unique_together = ("name", "category")
         db_table = "size"
 
 
@@ -131,7 +143,9 @@ class Colour(models.Model):
 
 
 class ProductVariation(models.Model):
-    size = models.ForeignKey(Size, on_delete=models.PROTECT, related_name="size")
+    size = models.ForeignKey(
+        Size, on_delete=models.PROTECT, related_name="size", null=True
+    )
     colour = models.ForeignKey(
         "Colour", on_delete=models.PROTECT, related_name="colour"
     )
@@ -141,33 +155,3 @@ class ProductVariation(models.Model):
 
     class Meta:
         db_table = "product_variation"
-
-class Review(models.Model):
-    review = models.TextField()
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_review')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_review')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'review'
-    
-    
-
-class Rating(models.Model):
-    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(2)])
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    created_at = models.DateField(auto_now_add=True)
-   
-    class Meta:
-       unique_together = ('user', 'product')
-       db_table = 'rating' 
-
-
-class WishList(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    products = models.ForeignKey(Product, on_delete=models.CASCADE)
-    added_at = models.DateTimeField(auto_now_add=True)
-    class Meta:
-        unique_together = ('user', 'products')
-        db_table = 'wish_list'
