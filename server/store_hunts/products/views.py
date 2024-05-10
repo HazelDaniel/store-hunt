@@ -25,7 +25,7 @@ from .serializers import (
 
 # Create your views here.
 
-CAT_SECTION = {"male": "Men's Fashion", "female": "Women's Fashion"}
+CAT_SECTION = {"male": "Men's Fashion", "female": "Women's Fashion", 'both': 'Unisex'}
 
 
 class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
@@ -100,9 +100,9 @@ class UpdateProductAPIView(generics.UpdateAPIView, SellerPermissionMixin):
     serializer_class = ProductCreateSerializer
     parser_classes = [FormParser, MultiPartParser, JSONParser]
     queryset = Product.objects.all()
-    lookup_field = "id"
+    lookup_field = "hash_id"
 
-    def update(self, request, id):
+    def update(self, request, hash_id, *args, **kwargs):
         instance = self.get_object()
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -162,7 +162,7 @@ class UpdateProductAPIView(generics.UpdateAPIView, SellerPermissionMixin):
 class RetrieveProductAPIView(generics.RetrieveAPIView, SellerPermissionMixin):
     serializer_class = ListAllProductSerializer
     queryset = Product.objects.all()
-    lookup_field = "id"
+    lookup_field = "hash_id"
 
     def get_queryset(self):
         seller = self.request.user.seller
@@ -172,7 +172,7 @@ class RetrieveProductAPIView(generics.RetrieveAPIView, SellerPermissionMixin):
 class DestroyProductAPIView(generics.DestroyAPIView, SellerPermissionMixin):
     serializer_class = DestroyProductSerializer
     queryset = Product.objects.all()
-    lookup_field = "id"
+    lookup_field = "hash_id"
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -192,7 +192,7 @@ class CreateProductVariationAPIView(
 ):
     serializer_class = ProductVariationSerializer
     queryset = Product.objects.all()
-    lookup_field = "id"
+    lookup_field = "hash_id"
 
     def post(self, request, *args, **kwargs):
         instance = self.get_object()

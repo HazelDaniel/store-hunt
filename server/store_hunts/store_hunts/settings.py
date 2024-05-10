@@ -225,3 +225,4 @@ SPECTACULAR_SETTINGS = {
 
 
 # setup scrapy
+DJANGO_HASHIDS_SALT = os.environ['HASHIDS']

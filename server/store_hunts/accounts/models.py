@@ -1,7 +1,7 @@
 import re
 import typing as t
 from datetime import datetime
-
+from django_hashids import HashidsField
 # from django.db.models.manager import BaseManager
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -13,6 +13,7 @@ from django.db import models
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .utils import validate_phone_number
+import os
 
 # Create your models here.
 
@@ -47,6 +48,7 @@ class UserBaseManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     first_name: str = models.CharField(max_length=50, null=False)
     email: str = models.CharField(max_length=100, null=False, unique=True)
     last_name: str = models.CharField(max_length=50, null=False)
@@ -99,6 +101,7 @@ class Buyer(models.Model):
 
 
 class Sellers(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     phone_number = models.CharField(validators=[validate_phone_number], unique=True)
     seller = models.OneToOneField(User, related_name="seller", on_delete=models.CASCADE)
 
@@ -108,6 +111,7 @@ class Sellers(models.Model):
 
 
 class Address(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     state: str = models.CharField(max_length=10, null=False)
     city: str = models.CharField(max_length=20, null=False)
     postal_code: int = models.IntegerField()
@@ -121,6 +125,7 @@ class Address(models.Model):
 
 
 class CustomerAddress(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     address = models.ForeignKey(User, on_delete=models.CASCADE)
     user = models.ForeignKey(Address, on_delete=models.CASCADE)
 

@@ -1,5 +1,5 @@
 import os
-
+from django_hashids import HashidsField
 from accounts.models import Sellers
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -11,6 +11,7 @@ User = get_user_model()
 
 
 class Brand(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     name = models.CharField(max_length=50, unique=True)
 
     class Meta:
@@ -21,6 +22,7 @@ class Brand(models.Model):
 
 
 class Product(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     name = models.CharField(max_length=50)
     description = models.TextField()
     category = models.ForeignKey(
@@ -50,6 +52,7 @@ class Product(models.Model):
 
 
 class Category(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     name = models.CharField(max_length=50, unique=True)
     parent = models.ForeignKey(
         "Category",
@@ -67,6 +70,7 @@ class Category(models.Model):
 
 
 class Promotion(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     name = models.CharField(help_text="promotion name")
     description = models.TextField(
         help_text="product promotion description",
@@ -88,6 +92,7 @@ class Promotion(models.Model):
 
 
 class ProductPromotionCategory(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     promotion = models.ForeignKey(Promotion, on_delete=models.PROTECT)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
@@ -97,6 +102,7 @@ class ProductPromotionCategory(models.Model):
 
 
 class ProductItem(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     qty_in_stock = models.PositiveIntegerField(default=0)
     product = models.ForeignKey(
@@ -114,6 +120,7 @@ def get_file_path(instance, filename):
 
 
 class Image(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10) 
     image = models.ImageField(upload_to=get_file_path)
     product_item = models.ForeignKey(
         ProductItem, on_delete=models.CASCADE, related_name="product_image"
@@ -127,6 +134,7 @@ class Image(models.Model):
 
 
 class Size(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     name = models.CharField(max_length=10)
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
 
@@ -136,13 +144,15 @@ class Size(models.Model):
 
 
 class Colour(models.Model):
-    name = models.CharField(max_length=10, unique=True)
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    name = models.CharField(max_length=50, unique=True)
 
     class Meta:
         db_table = "colour"
 
 
 class ProductVariation(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     size = models.ForeignKey(
         Size, on_delete=models.PROTECT, related_name="size", null=True
     )

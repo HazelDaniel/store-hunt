@@ -1,11 +1,13 @@
 from django.shortcuts import render
 from rest_framework import generics
-from .serializers import CreateReviewRatingSerializer
+from .serializers import CreateReviewRatingSerializer, ListReviewRatingSerializer
 from .models import Product, Review, Rating
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .permissions import UserNotProductOwnerPermission
+from rest_framework import permissions
+
 
 class CreateReviewAPIView(
     generics.GenericAPIView
@@ -16,8 +18,8 @@ class CreateReviewAPIView(
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            id = self.kwargs['id']
-            instance = get_object_or_404(Product, id=id)
+            id = self.kwargs['hash_id']
+            instance = get_object_or_404(Product, hash_id=id)
             user = request.user
             data = serializer.validated_data
             rating = data.pop("rating")
@@ -31,8 +33,11 @@ class CreateReviewAPIView(
                 status=status.HTTP_201_CREATED,
             )
 
-    def list(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        return Response(
-            {"status": 200, "data": serializer.data}, status=status.HTTP_200_OK
-        )
+
+
+class ListAllProductReview(generics.ListAPIView):
+    serializer_class = ListReviewRatingSerializer
+    permission_classes = [permissions.AllowAny]
+    queryset = Product.objects.all()
+    lookup_field = 'hash_id' 
+ 
