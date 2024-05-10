@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 
 from . import views
 
@@ -14,18 +14,23 @@ urlpatterns = [
         name="list_all_product",
     ),
     path(
-        "seller-central/products/<int:id>/product-update/",
+        "seller-central/products/<slug:hash_id>/product-update/",
         views.UpdateProductAPIView.as_view(),
         name="update_product",
     ),
     path(
-        "seller-central/products/<int:id>/product-detail",
+        "seller-central/products/<slug:hash_id>/product-detail",
         views.RetrieveProductAPIView.as_view(),
         name="update_product",
     ),
     path(
-        "seller-central/products/<int:id>/product-delete",
+        "seller-central/products/<slug:hash_id>/product-delete",
         views.DestroyProductAPIView.as_view(),
         name="update_product",
+    ),
+    path(
+        "seller-central/products/<slug:hash_id>/product-variation",
+        views.CreateProductVariationAPIView.as_view(),
+        name="product-variation",
     ),
 ]

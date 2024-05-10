@@ -4,18 +4,16 @@ from rest_framework_recursive.fields import RecursiveField
 from .models import (
     Brand,
     Category,
-    Image,
+    Colour,
     Product,
     ProductItem,
-    Size,
-    Colour,
     ProductVariation,
+    Size,
 )
 
 
 # serializer for creating product and updating product
 class ProductCreateSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(max_length=50)
     sub_category = serializers.ListField(
         child=serializers.CharField(max_length=50), required=False
     )
@@ -31,11 +29,12 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
     size = serializers.CharField(max_length=20)
     colour = serializers.CharField(max_length=20)
+    sex = serializers.CharField(max_length=7, help_text="choose either male or female")
 
     class Meta:
         model = Product
         fields = (
-            "category",
+            "sex",
             "sub_category",
             "name",
             "upload_image",  # Changed to accept file upload
@@ -46,10 +45,17 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "size",
             "colour",
         )
+    
+    def validate_sex(self, value):
+        sex = ['male', 'female', 'both']
+        if value.lower() not in sex:
+            return serializers.ValidationError("Sex must be either 'male', 'female' or 'both'")
+        return value.lower()
 
 
 # serializers for listing and retrieving product for sellers
 class BrandSerializer(serializers.ModelSerializer):
+    id = serializers.SlugField(source='hash_id')
     brand_name = serializers.CharField(source="name")
 
     class Meta:
@@ -57,32 +63,17 @@ class BrandSerializer(serializers.ModelSerializer):
         fields = ("id", "brand_name")
 
 
-class ColourSerializer(serializers.ModelSerializer):
-    colour_name = serializers.CharField(source="name")
+# class ProductVariationSerializer(serializers.ModelSerializer):
+#     product_variation = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Colour
-        fields = ("colour_name",)
+#     class Meta:
+#         model = ProductVariation
+#         fields = "product_variation"
 
-
-class SizeSerializer(serializers.ModelSerializer):
-    size_value = serializers.CharField(source="name")
-
-    class Meta:
-        model = Size
-        fields = ("size_value",)
-
-
-class ProductAttributeSerializer(serializers.ModelSerializer):
-    size = SizeSerializer(many=True, read_only=True)
-    colour = ColourSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = ProductVariation
-        fields = ("size", "colour")
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    id = serializers.SlugField(source='hash_id')
     child = RecursiveField(many=True)
     category_name = serializers.CharField(source="name")
 
@@ -92,11 +83,12 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ImageSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
+    id = serializers.SlugField(source='hash_id')
     image = serializers.ImageField()
 
 
 class ProductItemSerializer(serializers.ModelSerializer):
+    id = serializers.SlugField(source='hash_id')
     quantity = serializers.IntegerField(source="qty_in_stock")
     image = ImageSerializer(source="product_image", read_only=True, many=True)
     product_attribute = serializers.SerializerMethodField(read_only=True)
@@ -107,13 +99,17 @@ class ProductItemSerializer(serializers.ModelSerializer):
 
     def get_product_attribute(self, obj):
         variation = obj.variation.first()
-        return {"size": variation.size.name, "colour": variation.colour.name}
+        if variation:
+            return {"size": variation.size.name, "colour": variation.colour.name}
+        else:
+            return {"size": None, "colour": None}
 
 
 class ListAllProductSerializer(serializers.ModelSerializer):
+    id = serializers.SlugField(source='hash_id')
     category = CategorySerializer(read_only=True)
     brand = BrandSerializer(read_only=True)
-    product_item = ProductItemSerializer(read_only=True, many=True)
+    product_detail = ProductItemSerializer(read_only=True, many=True)
     product_name = serializers.CharField(source="name")
 
     class Meta:
@@ -124,11 +120,27 @@ class ListAllProductSerializer(serializers.ModelSerializer):
             "description",
             "category",
             "brand",
-            "product_item",
+            "product_detail",
         )
 
 
 class DestroyProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        field = '__all__'
+        field = "__all__"
+
+
+class ProductVariationSerializer(serializers.ModelSerializer):
+    colour = serializers.CharField(max_length=10)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    quantity = serializers.IntegerField()
+    size = serializers.CharField(required=False)
+    upload_image = serializers.ListField(
+        child=serializers.ImageField(
+            max_length=10000, allow_empty_file=False, use_url=False
+        ),
+    )
+
+    class Meta:
+        model = Product
+        fields = ("colour", "price", "quantity", "size", "upload_image")

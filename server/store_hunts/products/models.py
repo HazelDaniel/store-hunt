@@ -1,12 +1,17 @@
 import os
-
+from django_hashids import HashidsField
 from accounts.models import Sellers
+from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 # Create your models here.
 
+User = get_user_model()
+
 
 class Brand(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     name = models.CharField(max_length=50, unique=True)
 
     class Meta:
@@ -17,6 +22,7 @@ class Brand(models.Model):
 
 
 class Product(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     name = models.CharField(max_length=50)
     description = models.TextField()
     category = models.ForeignKey(
@@ -37,8 +43,16 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    @classmethod
+    def seller_exists(cls, seller_obj):
+        return cls.objects.filter(seller=seller_obj).exists()
+
+    def product_owner(self, seller_obj):
+        return self.seller == seller_obj
+
 
 class Category(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     name = models.CharField(max_length=50, unique=True)
     parent = models.ForeignKey(
         "Category",
@@ -46,9 +60,6 @@ class Category(models.Model):
         null=True,
         blank=True,
         related_name="child",
-    )
-    promotion = models.ManyToManyField(
-        "Promotion", through="PromotionCategory", related_name="promotion_category"
     )
 
     class Meta:
@@ -59,6 +70,7 @@ class Category(models.Model):
 
 
 class Promotion(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     name = models.CharField(help_text="promotion name")
     description = models.TextField(
         help_text="product promotion description",
@@ -67,26 +79,34 @@ class Promotion(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     category = models.ManyToManyField(
-        "Category", through="PromotionCategory", related_name="promotion_category"
+        "Category",
+        through="ProductPromotionCategory",
+        related_name="promotion_category",
+    )
+    product = models.ManyToManyField(
+        Product, through="ProductPromotionCategory", related_name="promotion_product"
     )
 
     class Meta:
         db_table = "promotion"
 
 
-class PromotionCategory(models.Model):
-    promotion = models.ForeignKey(Promotion, on_delete=models.CASCADE, null=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
+class ProductPromotionCategory(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    promotion = models.ForeignKey(Promotion, on_delete=models.PROTECT)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
 
     class Meta:
-        db_table = "promotion_category"
+        db_table = "product_promotion_category"
 
 
 class ProductItem(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     qty_in_stock = models.PositiveIntegerField(default=0)
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="product"
+        Product, on_delete=models.CASCADE, related_name="product_detail"
     )
 
     class Meta:
@@ -100,6 +120,7 @@ def get_file_path(instance, filename):
 
 
 class Image(models.Model):
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10) 
     image = models.ImageField(upload_to=get_file_path)
     product_item = models.ForeignKey(
         ProductItem, on_delete=models.CASCADE, related_name="product_image"
@@ -113,25 +134,28 @@ class Image(models.Model):
 
 
 class Size(models.Model):
-    name = models.CharField(max_length=10, unique=True)
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    name = models.CharField(max_length=10)
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
-    # sort_order = models.CharField(
-    #     min_length=1, max_length=10, help_text="Order to sort by"
-    # )
 
     class Meta:
+        unique_together = ("name", "category")
         db_table = "size"
 
 
 class Colour(models.Model):
-    name = models.CharField(max_length=10, unique=True)
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    name = models.CharField(max_length=50, unique=True)
 
     class Meta:
         db_table = "colour"
 
 
 class ProductVariation(models.Model):
-    size = models.ForeignKey(Size, on_delete=models.PROTECT, related_name="size")
+    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    size = models.ForeignKey(
+        Size, on_delete=models.PROTECT, related_name="size", null=True
+    )
     colour = models.ForeignKey(
         "Colour", on_delete=models.PROTECT, related_name="colour"
     )

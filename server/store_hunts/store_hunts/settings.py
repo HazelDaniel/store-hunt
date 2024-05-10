@@ -11,8 +11,23 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
+
+import django
+
+from .config import (
+    DB,
+    DBUSER,
+    EMAIL_HOST,
+    EMAIL_HOST_PASSWORD,
+    EMAIL_HOST_USER,
+    EMAIL_PORT,
+    EMAIL_USE_TLS,
+    PASSWORD,
+    PORT,
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,10 +40,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEYS")
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = os.environ.get("DEBUG") == "1"
-
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -52,6 +66,9 @@ INSTALLED_APPS = [
     # internal applications
     "accounts",
     "products",
+    "shop",
+    # scrapy app
+    "productscraper",
 ]
 
 # handle force text error
@@ -98,10 +115,10 @@ WSGI_APPLICATION = "store_hunts.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB"),
-        "USER": os.environ.get("DBUSER"),
-        "PASSWORD": os.environ.get("PASSWORD"),
-        "PORT": int(os.environ.get("PORT")),
+        "NAME": DB,
+        "USER": DBUSER,
+        "PASSWORD": PASSWORD,
+        "PORT": PORT,
     }
 }
 
@@ -168,11 +185,11 @@ MEDIA_ROOT = str(BASE_DIR / "media")
 
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "localhost"
-EMAIL_PORT = "1025"
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-EMAIL_USE_TLS = False
+EMAIL_HOST = EMAIL_HOST
+EMAIL_PORT = EMAIL_PORT
+EMAIL_HOST_USER = EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
+EMAIL_USE_TLS = EMAIL_USE_TLS
 
 SITE_ID = 1
 
@@ -205,3 +222,7 @@ SPECTACULAR_SETTINGS = {
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
     "REDOC_DIST": "SIDECAR",
 }
+
+
+# setup scrapy
+DJANGO_HASHIDS_SALT = os.environ['HASHIDS']

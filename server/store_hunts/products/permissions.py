@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission
+from .models import Product
 
 
 class IsSellerPermissions(BasePermission):
