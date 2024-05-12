@@ -53,7 +53,7 @@ class Product(models.Model):
 
 class Category(models.Model):
     hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
     parent = models.ForeignKey(
         "Category",
         on_delete=models.CASCADE,
@@ -64,6 +64,7 @@ class Category(models.Model):
 
     class Meta:
         db_table = "category"
+        unique_together = ['parent', 'name']
 
     def __str__(self):
         return self.name

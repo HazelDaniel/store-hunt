@@ -46,3 +46,8 @@ class ListReviewRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'review_rating']
+    
+
+
+class ListProductSerializer(serializers.Serializer):
+    pass

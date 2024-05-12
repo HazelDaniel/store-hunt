@@ -40,4 +40,8 @@ class ListAllProductReview(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     queryset = Product.objects.all()
     lookup_field = 'hash_id' 
- 
+
+
+
+class ListProduct(generics.ListAPIView):
+    pass 

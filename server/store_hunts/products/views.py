@@ -49,6 +49,7 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
             # create the parent key for the self reference
             parent_category, _ = Category.objects.get_or_create(name=CAT_SECTION[sex])
             # handle self referencing relationship  in category
+            print('-----errror')
             for cat in sub_category:
                 child_category, _ = Category.objects.get_or_create(
                     name=cat, parent=parent_category
