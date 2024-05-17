@@ -1,10 +1,11 @@
 from django.shortcuts import get_list_or_404, get_object_or_404
 from rest_framework import generics, status
+from rest_framework.mixins import CreateModelMixin
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.request import HttpRequest
 from rest_framework.response import Response
-from rest_framework.mixins import CreateModelMixin
-
+from django.conf import settings
+from accounts.utils import load_image
 from .models import (
     Brand,
     Category,
@@ -25,7 +26,6 @@ from .serializers import (
 
 # Create your views here.
 
-CAT_SECTION = {"male": "Men's Fashion", "female": "Women's Fashion", 'both': 'Unisex'}
 
 
 class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
@@ -39,20 +39,20 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
             brand = data.pop("brand")
             sub_category = data.pop("sub_category")
             uploaded_images = data.pop("upload_image")
-            size = data.pop("size")
-            sex = data.pop("sex").lower()
+            size = data.pop("size", None)
+            section = data.pop("section")
             colour = data.pop("colour")
             product_items = {
                 "price": data.pop("price"),
                 "qty_in_stock": data.pop("quantity"),
             }
+            slug_title = data.get('title').replace(' ', '-')
             # create the parent key for the self reference
-            parent_category, _ = Category.objects.get_or_create(name=CAT_SECTION[sex])
+            parent_category, _ = Category.objects.get_or_create(name=section)
             # handle self referencing relationship  in category
-            print('-----errror')
             for cat in sub_category:
                 child_category, _ = Category.objects.get_or_create(
-                    name=cat, parent=parent_category
+                    name=cat.lower(), parent=parent_category
                 )
                 parent_category = child_category
 
@@ -61,13 +61,17 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
                 **data,
                 category=parent_category,
                 brand=brand,
-                seller=request.user.seller
+                seller=request.user.seller,
+                slug_title=slug_title
             )
             colour, _ = Colour.objects.get_or_create(name=colour)
             product_item = ProductItem.objects.create(**product_items, product=product)
             # store product attribute
             # store image file pth
+            
             for image in uploaded_images:
+                if settings.DEBUG:
+                    image = load_image(image)
                 Image.objects.create(image=image, product_item=product_item)
 
             if size:
@@ -127,7 +131,7 @@ class UpdateProductAPIView(generics.UpdateAPIView, SellerPermissionMixin):
 
             # TODO category
             parent_category, ca_c = Category.objects.get_or_create(
-                name=CAT_SECTION[data["sex"]]
+                name=data.get('section')
             )
             sub_category = data["sub_category"]
             for cat in sub_category:
@@ -213,20 +217,31 @@ class CreateProductVariationAPIView(
     def perform_create(self, serializer):
         data = serializer.validated_data
         instance = serializer.instance
+        size = data.get("size")
+        colour = data.get('colour')
+        upload_image = data.get('upload_image') or []
         product_item = ProductItem.objects.create(
-            price=data["price"], qty_in_stock=data["quantity"], product=instance
+            price=data.get("price"), qty_in_stock=data.get("quantity"), product=instance
         )
-        colour, _ = Colour.objects.get_or_create(name=data["colour"])
-        size, _ = Size.objects.get_or_create(
-            name=data.get("size").upper(), category=instance.category
-        )
+
+        if colour:
+            colour, _ = Colour.objects.get_or_create(name=colour)
+        if size:
+            size = size.upper()
+            size, _ = Size.objects.get_or_create(
+                name=size, category=instance.category
+            )
         ProductVariation.objects.create(
             size=size, colour=colour, product_item=product_item
         )
 
-        for image in data.get("upload_image"):
+        for image in upload_image:
+            if settings.DEBUG:
+                image = load_image(image)
             Image.objects.create(image=image, product_item=product_item)
-
+ 
+        instance.has_variant = True
+        instance.save()
     def get_queryset(self):
         seller = self.request.user.seller
         return Product.objects.filter(seller=seller)

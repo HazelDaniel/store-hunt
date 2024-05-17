@@ -1,5 +1,5 @@
-from rest_framework.permissions import BasePermission
 from products.models import Product
+from rest_framework.permissions import BasePermission
 
 
 class UserNotProductOwnerPermission(BasePermission):

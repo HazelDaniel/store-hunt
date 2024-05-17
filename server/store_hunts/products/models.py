@@ -1,9 +1,10 @@
 import os
-from django_hashids import HashidsField
+
 from accounts.models import Sellers
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django_hashids import HashidsField
 
 # Create your models here.
 
@@ -11,7 +12,9 @@ User = get_user_model()
 
 
 class Brand(models.Model):
-    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    hash_id = HashidsField(
+        real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+    )
     name = models.CharField(max_length=50, unique=True)
 
     class Meta:
@@ -22,9 +25,13 @@ class Brand(models.Model):
 
 
 class Product(models.Model):
-    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
-    name = models.CharField(max_length=50)
+    hash_id = HashidsField(
+        real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+    )
+    title = models.CharField(max_length=200, unique=True)
+    has_variant = models.BooleanField(default=False)
     description = models.TextField()
+    slug_title = models.SlugField(max_length=200, unique=True)
     category = models.ForeignKey(
         "Category", on_delete=models.PROTECT, related_name="product_category"
     )
@@ -41,7 +48,7 @@ class Product(models.Model):
         db_table = "product"
 
     def __str__(self):
-        return self.name
+        return self.title
 
     @classmethod
     def seller_exists(cls, seller_obj):
@@ -52,8 +59,10 @@ class Product(models.Model):
 
 
 class Category(models.Model):
-    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
-    name = models.CharField(max_length=50)
+    hash_id = HashidsField(
+        real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+    )
+    name = models.CharField(max_length=100)
     parent = models.ForeignKey(
         "Category",
         on_delete=models.CASCADE,
@@ -64,14 +73,25 @@ class Category(models.Model):
 
     class Meta:
         db_table = "category"
-        unique_together = ['parent', 'name']
+        unique_together = ["parent", "name"]
 
     def __str__(self):
         return self.name
-
+    
+    
+    def top_level_category(self):
+        """
+        get the top lever category
+        """
+        cat = self
+        while cat.parent is not None:
+            cat = cat.parent 
+        return cat
 
 class Promotion(models.Model):
-    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    hash_id = HashidsField(
+        real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+    )
     name = models.CharField(help_text="promotion name")
     description = models.TextField(
         help_text="product promotion description",
@@ -93,7 +113,9 @@ class Promotion(models.Model):
 
 
 class ProductPromotionCategory(models.Model):
-    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    hash_id = HashidsField(
+        real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+    )
     promotion = models.ForeignKey(Promotion, on_delete=models.PROTECT)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
@@ -103,7 +125,9 @@ class ProductPromotionCategory(models.Model):
 
 
 class ProductItem(models.Model):
-    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    hash_id = HashidsField(
+        real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+    )
     price = models.DecimalField(max_digits=10, decimal_places=2)
     qty_in_stock = models.PositiveIntegerField(default=0)
     product = models.ForeignKey(
@@ -116,12 +140,14 @@ class ProductItem(models.Model):
 
 def get_file_path(instance, filename):
     return os.path.join(
-        "products", "images", instance.product_item.product.name, filename
+        "products", "images", f"product_{instance.product_item.product.id}", filename
     )
 
 
 class Image(models.Model):
-    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10) 
+    hash_id = HashidsField(
+        real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+    )
     image = models.ImageField(upload_to=get_file_path)
     product_item = models.ForeignKey(
         ProductItem, on_delete=models.CASCADE, related_name="product_image"
@@ -135,7 +161,9 @@ class Image(models.Model):
 
 
 class Size(models.Model):
-    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    hash_id = HashidsField(
+        real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+    )
     name = models.CharField(max_length=10)
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
 
@@ -145,23 +173,27 @@ class Size(models.Model):
 
 
 class Colour(models.Model):
-    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
-    name = models.CharField(max_length=50, unique=True)
+    hash_id = HashidsField(
+        real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+    )
+    name = models.CharField(max_length=100, unique=True)
 
     class Meta:
         db_table = "colour"
 
 
 class ProductVariation(models.Model):
-    hash_id = HashidsField(real_field_name='id', salt=os.environ['HASHIDS'], min_length=10)
+    hash_id = HashidsField(
+        real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+    )
     size = models.ForeignKey(
         Size, on_delete=models.PROTECT, related_name="size", null=True
     )
     colour = models.ForeignKey(
-        "Colour", on_delete=models.PROTECT, related_name="colour"
+        "Colour", on_delete=models.PROTECT, related_name="colour", null=True
     )
     product_item = models.ForeignKey(
-        ProductItem, on_delete=models.CASCADE, related_name="variation"
+        ProductItem, on_delete=models.CASCADE, related_name="variation", null=True
     )
 
     class Meta:
