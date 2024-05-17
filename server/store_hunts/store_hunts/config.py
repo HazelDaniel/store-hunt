@@ -3,12 +3,12 @@ import os
 
 if os.environ["DEBUG"] == "1":
     # email config for mailhog
-    EMAIL_HOST = "localhost"
-    EMAIL_HOST_PASSWORD = ""
-    EMAIL_HOST_USER = ""
-    EMAIL_PORT = 1025
-    EMAIL_HOST_PASSWORD = ""
-    EMAIL_USE_TLS = False
+    EMAIL_HOST = os.environ.get("EMAIL_HOST")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+    EMAIL_PORT = os.environ.get("EMAIL_PORT")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS") == "True"
 
     # database config
     DBUSER = "simi"
@@ -23,7 +23,7 @@ else:
     EMAIL_HOST = os.environ.get("EMAIL_HOST")
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
     EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-    EMAIL_PORT = os.environ.get("EMAIL_PORT")
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT"))
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
     EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS") == "True"
 

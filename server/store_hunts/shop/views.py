@@ -4,16 +4,18 @@ from products.models import Category, Product, ProductItem
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
+
 from .models import Rating, Review
 from .permissions import UserNotProductOwnerPermission
 from .serializers import (
     CreateReviewRatingSerializer,
+    KidsProductSerializer,
     ListProductSerializer,
     ListReviewRatingSerializer,
     MensProductSerializer,
-    WomenProductSerializer,
     UnisexProductSerializer,
-    KidsProductSerializer
+    WomenProductSerializer,
+    ProductDetailSerializer
 )
 
 
@@ -62,28 +64,26 @@ class MensProductPIView(generics.ListAPIView):
     serializer_class = MensProductSerializer
     queryset = Category.objects.all()
     permission_classes = [permissions.AllowAny]
-    
+
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        category = Category.objects.filter(name='men')
+        category = Category.objects.filter(name="men")
         return category
-    
- 
+
 
 class WomensProductPIView(generics.ListAPIView):
     serializer_class = WomenProductSerializer
     queryset = Product.objects.all()
     permission_classes = [permissions.AllowAny]
-    
+
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
         category = Category.objects.filter(name="women")
         return category
-
 
 
 class KidsProductPIView(generics.ListAPIView):
@@ -100,7 +100,7 @@ class KidsProductPIView(generics.ListAPIView):
 #     serializer_class = UnisexProductSerializer
 #     queryset = Product.objects.all()
 #     permission_classes = [permissions.AllowAny]
-    
+
 #     def list(self, request, *args, **kwargs):
 #         return super().list(request, *args, **kwargs)
 #     def get_queryset(self):
@@ -110,4 +110,7 @@ class KidsProductPIView(generics.ListAPIView):
 
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
-    pass
+    serializer_class = ProductDetailSerializer
+    queryset = Product.objects.all()
+    permission_classes = [permissions.AllowAny]
+    lookup_field = 'slug_title'

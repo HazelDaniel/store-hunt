@@ -29,7 +29,9 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     size = serializers.CharField(max_length=10, required=False)
     colour = serializers.CharField(max_length=100)
-    section = serializers.CharField(max_length=7, help_text="section where cloth should fall intoo")
+    section = serializers.CharField(
+        max_length=7, help_text="section where cloth should fall intoo"
+    )
 
     class Meta:
         model = Product
@@ -47,7 +49,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate_section(self, value):
-        section = ('men', 'women', 'kids')
+        section = ("men", "women", "kids")
         if value.lower() not in section:
             return serializers.ValidationError(
                 "product category section should either be men women or kids"
@@ -118,10 +120,10 @@ class ListAllProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             "id",
-            'title',
-            'slug_title',
+            "title",
+            "slug_title",
             "description",
-            'has_variant',
+            "has_variant",
             "category",
             "brand",
             "product_detail",

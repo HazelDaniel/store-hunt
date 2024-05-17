@@ -25,4 +25,5 @@ urlpatterns = [
         views.KidsProductPIView.as_view(),
         name="kids_product",
     ),
+    path('shop/<slug:slug_title>', views.ProductDetailAPIView.as_view(), name='product_detail'),
 ]

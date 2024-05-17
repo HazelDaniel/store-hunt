@@ -1,11 +1,11 @@
 import base64
-from rest_framework_recursive.fields import RecursiveField
+
 from django.db.models import Avg
-from products.models import Category, Product, ProductItem
+from products.models import Category, Product, ProductItem, Brand
 from rest_framework import serializers
+from rest_framework_recursive.fields import RecursiveField
 
 from .models import Rating, Review
-
 
 
 def get_all_subcategories(category):
@@ -33,7 +33,9 @@ def get_products_by_top_level_category(category_name):
         products = Product.objects.filter(category__in=subcategories)
         return products
     except Category.DoesNotExist:
-        return Product.objects.none()  # Return an empty queryset if the category does not exist
+        return (
+            Product.objects.none()
+        )  # Return an empty queryset if the category does not exist
 
 
 class CreateReviewRatingSerializer(serializers.Serializer):
@@ -77,8 +79,6 @@ class ListReviewRatingSerializer(serializers.ModelSerializer):
         fields = ["id", "review_rating"]
 
 
-
-
 class ListProductSerializer(serializers.ModelSerializer):
     id = serializers.SlugField(source="hash_id")
     title = serializers.CharField(read_only=True)
@@ -88,7 +88,7 @@ class ListProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "title","image", "avg_rating", "price"]
+        fields = ["id", "title", "image", "avg_rating", "price"]
 
     def get_avg_rating(self, obj):
         rating = Rating.objects.filter(product=obj).aggregate(avg_rating=Avg("rating"))[
@@ -109,68 +109,129 @@ class ListProductSerializer(serializers.ModelSerializer):
         return image
 
 
-
-
-
 class MensProductSerializer(serializers.ModelSerializer):
     # child = RecursiveField(many=True)
-    id = serializers.SlugField(source='hash_id')
+    id = serializers.SlugField(source="hash_id")
     product = serializers.SerializerMethodField()
     product_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = ('id','name', 'product', 'product_count') 
-   
+        fields = ("id", "name", "product", "product_count")
+
     def get_product(self, obj):
         products = get_products_by_top_level_category(obj.name)
-        return ListProductSerializer(products, many=True).data 
-    
+        return ListProductSerializer(products, many=True).data
+
     def get_product_count(self, obj):
-        products  = get_products_by_top_level_category(obj)
+        products = get_products_by_top_level_category(obj)
         return products.count()
-    
-    
 
 
 class WomenProductSerializer(serializers.ModelSerializer):
-    id = serializers.SlugField(source='hash_id')
+    id = serializers.SlugField(source="hash_id")
     product = serializers.SerializerMethodField()
     product_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = ('id','name', 'product', 'product_count') 
+        fields = ("id", "name", "product", "product_count")
 
     def get_product(self, obj):
         products = get_products_by_top_level_category(obj.name)
-        return ListProductSerializer(products, many=True).data 
+        return ListProductSerializer(products, many=True).data
 
     def get_product_count(self, obj):
-        products  = get_products_by_top_level_category(obj)
+        products = get_products_by_top_level_category(obj)
         return products.count()
 
 
 class KidsProductSerializer(serializers.ModelSerializer):
-    id = serializers.SlugField(source='hash_id')
+    id = serializers.SlugField(source="hash_id")
     product = serializers.SerializerMethodField()
     product_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = ('id','name', 'product', 'product_count') 
-   
+        fields = ("id", "name", "product", "product_count")
+
     def get_product(self, obj):
         products = get_products_by_top_level_category(obj.name)
-        return ListProductSerializer(products, many=True).data 
+        return ListProductSerializer(products, many=True).data
 
     def get_product_count(self, obj):
-        products  = get_products_by_top_level_category(obj)
+        products = get_products_by_top_level_category(obj)
         return products.count()
+
 
 class UnisexProductSerializer(ListProductSerializer):
     pass
 
+class BrandSerializer(serializers.ModelSerializer):
+    # id = serializers.SlugField(source="hash_id")
+    brand = serializers.CharField(source="name")
+
+    class Meta:
+        model = Brand
+        fields = ("brand",)
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    # id = serializers.SlugField(source="hash_id")
+    category = serializers.CharField(source="name")
+
+    class Meta:
+        model = Category
+        fields = ["category"]
+
+
+class ImageSerializer(serializers.Serializer):
+    # id = serializers.SlugField(source="hash_id")
+    image = serializers.ImageField()
+
+
+class ProductItemSerializer(serializers.ModelSerializer):
+    # id = serializers.SlugField(source="hash_id")
+    quantity = serializers.IntegerField(source="qty_in_stock")
+    image = ImageSerializer(source="product_image", read_only=True, many=True)
+    product_attribute = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = ProductItem
+        fields = ["price", "quantity", "product_attribute", "image"]
+
+    def get_product_attribute(self, obj):
+        variations = obj.variation.all()
+
+        for variation in variations:
+            if variation.size and variation.colour:
+                return {"size": variation.size.name, "colour": variation.colour.name}
+            elif variation.colour:
+                return {"size": None, "colour": variation.colour.name}
+        return {"size": None, "colour": None}
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
+    id = serializers.SlugField(source="hash_id")
+    category = CategorySerializer(read_only=True)
+    brand = BrandSerializer(read_only=True)
+    product_detail = ProductItemSerializer(read_only=True, many=True)
+    avg_rating = serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields = ('title',  'description', 'price', 'total_rating', 'image')
+        fields = (
+            "id",
+            "title",
+            "avg_rating",
+            "description",
+            "has_variant",
+            "category",
+            "brand",
+            "product_detail",
+        )
+
+    def get_avg_rating(self, obj):
+        rating = Rating.objects.filter(product=obj).aggregate(avg_rating=Avg("rating"))[
+            "avg_rating"
+        ]
+        return rating

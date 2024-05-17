@@ -1,11 +1,12 @@
+from accounts.utils import load_image
+from django.conf import settings
 from django.shortcuts import get_list_or_404, get_object_or_404
 from rest_framework import generics, status
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.request import HttpRequest
 from rest_framework.response import Response
-from django.conf import settings
-from accounts.utils import load_image
+
 from .models import (
     Brand,
     Category,
@@ -27,7 +28,6 @@ from .serializers import (
 # Create your views here.
 
 
-
 class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
     serializer_class = ProductCreateSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -46,7 +46,7 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
                 "price": data.pop("price"),
                 "qty_in_stock": data.pop("quantity"),
             }
-            slug_title = data.get('title').replace(' ', '-')
+            slug_title = data.get("title").replace(" ", "-")
             # create the parent key for the self reference
             parent_category, _ = Category.objects.get_or_create(name=section)
             # handle self referencing relationship  in category
@@ -68,7 +68,7 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
             product_item = ProductItem.objects.create(**product_items, product=product)
             # store product attribute
             # store image file pth
-            
+
             for image in uploaded_images:
                 if settings.DEBUG:
                     image = load_image(image)
@@ -131,7 +131,7 @@ class UpdateProductAPIView(generics.UpdateAPIView, SellerPermissionMixin):
 
             # TODO category
             parent_category, ca_c = Category.objects.get_or_create(
-                name=data.get('section')
+                name=data.get("section")
             )
             sub_category = data["sub_category"]
             for cat in sub_category:
@@ -218,8 +218,8 @@ class CreateProductVariationAPIView(
         data = serializer.validated_data
         instance = serializer.instance
         size = data.get("size")
-        colour = data.get('colour')
-        upload_image = data.get('upload_image') or []
+        colour = data.get("colour")
+        upload_image = data.get("upload_image") or []
         product_item = ProductItem.objects.create(
             price=data.get("price"), qty_in_stock=data.get("quantity"), product=instance
         )
@@ -228,9 +228,7 @@ class CreateProductVariationAPIView(
             colour, _ = Colour.objects.get_or_create(name=colour)
         if size:
             size = size.upper()
-            size, _ = Size.objects.get_or_create(
-                name=size, category=instance.category
-            )
+            size, _ = Size.objects.get_or_create(name=size, category=instance.category)
         ProductVariation.objects.create(
             size=size, colour=colour, product_item=product_item
         )
@@ -239,9 +237,10 @@ class CreateProductVariationAPIView(
             if settings.DEBUG:
                 image = load_image(image)
             Image.objects.create(image=image, product_item=product_item)
- 
+
         instance.has_variant = True
         instance.save()
+
     def get_queryset(self):
         seller = self.request.user.seller
         return Product.objects.filter(seller=seller)

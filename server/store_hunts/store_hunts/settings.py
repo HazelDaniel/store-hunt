@@ -91,7 +91,7 @@ ROOT_URLCONF = "store_hunts.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / 'accounts' / 'templates' / 'mail'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -182,15 +182,16 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = str(BASE_DIR / "media")
 
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = EMAIL_HOST
-EMAIL_PORT = EMAIL_PORT
-EMAIL_HOST_USER = EMAIL_HOST_USER
-EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
-EMAIL_USE_TLS = EMAIL_USE_TLS
-
+EMAIL_BACKEND = "django_mailgun_mime.backends.MailgunMIMEBackend"
+MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY')
+MAILGUN_DOMAIN_NAME = 'mg.velolend.me'
+EMAIL_HOST_USER="storehunt@mg.velolend.me"
+# EMAIL_HOST = EMAIL_HOST
+# EMAIL_PORT = int(EMAIL_PORT)
+# EMAIL_HOST_USER = EMAIL_HOST_USER
+# EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
+# EMAIL_USE_TLS = EMAIL_USE_TLS
 SITE_ID = 1
-
 
 # rest_framework default settings
 REST_FRAMEWORK = {

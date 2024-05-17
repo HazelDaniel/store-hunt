@@ -15,7 +15,7 @@ from rest_framework.request import HttpRequest
 from rest_framework.response import Response
 from rest_framework.serializers import SerializerMetaclass
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-
+from django.conf import settings
 from store_hunts.config import DOMAIN
 
 from .models import Buyer, Sellers
@@ -55,7 +55,7 @@ class UserRegistrationAPIView(generics.CreateAPIView):
                 "user": user.is_seller,
             }
             subject = "Verification Email"
-            send_email(subject, "support@storehunt.com", user.email, context)
+            send_email(subject, settings.EMAIL_HOST_USER, user.email, context)
             return Response(
                 {
                     "status": 201,
@@ -90,7 +90,7 @@ class SellerRegistrationAPIView(generics.CreateAPIView):
                 "seller": user.is_seller,
             }
             subject = "Verification Email"
-            send_email(subject, "support@storehunt.com", user.email, context)
+            send_email(subject, settings.EMAIL_HOST_USER, user.email, context)
             return Response(
                 {
                     "status": 201,
