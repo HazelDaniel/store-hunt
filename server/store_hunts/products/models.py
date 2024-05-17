@@ -33,7 +33,7 @@ class Product(models.Model):
     description = models.TextField()
     slug_title = models.SlugField(max_length=200, unique=True)
     category = models.ForeignKey(
-        "Category", on_delete=models.PROTECT, related_name="product_category"
+        "Category", on_delete=models.PROTECT, related_name="product"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -79,14 +79,6 @@ class Category(models.Model):
         return self.name
     
     
-    def top_level_category(self):
-        """
-        get the top lever category
-        """
-        cat = self
-        while cat.parent is not None:
-            cat = cat.parent 
-        return cat
 
 class Promotion(models.Model):
     hash_id = HashidsField(

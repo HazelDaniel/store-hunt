@@ -21,8 +21,8 @@ urlpatterns = [
         name="women_product",
     ),
     path(
-        "unisex-fashion-store/",
-        views.UnisexProductPIView.as_view(),
-        name="unisex_product",
+        "kids-fashion-store/",
+        views.KidsProductPIView.as_view(),
+        name="kids_product",
     ),
 ]

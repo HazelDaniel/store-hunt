@@ -29,7 +29,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     size = serializers.CharField(max_length=10, required=False)
     colour = serializers.CharField(max_length=100)
-    section = serializers.CharField(max_length=7, help_text="section where product should fall intoo")
+    section = serializers.CharField(max_length=7, help_text="section where cloth should fall intoo")
 
     class Meta:
         model = Product

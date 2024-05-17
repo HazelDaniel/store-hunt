@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from products.models import Category, Product, ProductItem
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-
+from rest_framework.viewsets import ReadOnlyModelViewSet
 from .models import Rating, Review
 from .permissions import UserNotProductOwnerPermission
 from .serializers import (
@@ -60,19 +60,17 @@ class ListProduct(generics.ListAPIView):
 
 class MensProductPIView(generics.ListAPIView):
     serializer_class = MensProductSerializer
-    queryset = Product.objects.all()
+    queryset = Category.objects.all()
     permission_classes = [permissions.AllowAny]
     
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        product = Product.objects.filter()
-        return product
+        category = Category.objects.filter(name='men')
+        return category
     
-    def get_all_child_product(self, cat):
-        pass
-    
+ 
 
 class WomensProductPIView(generics.ListAPIView):
     serializer_class = WomenProductSerializer
@@ -83,35 +81,32 @@ class WomensProductPIView(generics.ListAPIView):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        category = Category.objects.get(name="women")
-        product = Product.objects.filter(category__parent=category)
-
-        return product
+        category = Category.objects.filter(name="women")
+        return category
 
 
 
-# class KidsProductPIView(generics.ListAPIView):
-#     serializer_class = WomenProductSerializer
-#     queryset = Product.objects.all()
-#     permission_classes = [permissions.AllowAny]
-
-#     def get_queryset(self):
-#         category = Category.objects.get(name="women")
-#         product = Product.objects.filter(category__parent=category)
-#         return product
-
-
-class UnisexProductPIView(generics.ListAPIView):
-    serializer_class = UnisexProductSerializer
+class KidsProductPIView(generics.ListAPIView):
+    serializer_class = KidsProductSerializer
     queryset = Product.objects.all()
     permission_classes = [permissions.AllowAny]
-    
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+
     def get_queryset(self):
-        category = Category.objects.get(name="unisex")
-        product = Product.objects.filter(category__parent=category)
-        return product
+        category = Category.objects.filter(name="kids")
+        return category
+
+
+# class UnisexProductPIView(generics.ListAPIView):
+#     serializer_class = UnisexProductSerializer
+#     queryset = Product.objects.all()
+#     permission_classes = [permissions.AllowAny]
+    
+#     def list(self, request, *args, **kwargs):
+#         return super().list(request, *args, **kwargs)
+#     def get_queryset(self):
+#         category = Category.objects.get(name="unisex")
+#         product = Product.objects.filter(category__parent=category)
+#         return product
 
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
