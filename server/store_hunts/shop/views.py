@@ -3,9 +3,8 @@ from django.shortcuts import get_object_or_404, render
 from products.models import Category, Product, ProductItem
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework.viewsets import ReadOnlyModelViewSet
-
-from .models import Rating, Review
+from django.shortcuts import get_object_or_404
+from .models import Rating, Review, WishList
 from .permissions import UserNotProductOwnerPermission
 from .serializers import (
     CreateReviewRatingSerializer,
@@ -13,9 +12,10 @@ from .serializers import (
     ListProductSerializer,
     ListReviewRatingSerializer,
     MensProductSerializer,
-    UnisexProductSerializer,
+    ProductDetailSerializer,
     WomenProductSerializer,
-    ProductDetailSerializer
+    WishListSerializer,
+    ListWishSerializer,
 )
 
 
@@ -49,11 +49,18 @@ class ListAllProductReview(generics.ListAPIView):
     queryset = Product.objects.all()
     lookup_field = "hash_id"
 
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class ListProduct(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = Product.objects.all()
     serializer_class = ListProductSerializer
+ 
+    
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
         product = Product.objects.filter(is_active=True)
@@ -65,9 +72,6 @@ class MensProductPIView(generics.ListAPIView):
     queryset = Category.objects.all()
     permission_classes = [permissions.AllowAny]
 
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
     def get_queryset(self):
         category = Category.objects.filter(name="men")
         return category
@@ -75,7 +79,7 @@ class MensProductPIView(generics.ListAPIView):
 
 class WomensProductPIView(generics.ListAPIView):
     serializer_class = WomenProductSerializer
-    queryset = Product.objects.all()
+    queryset = Category.objects.all()
     permission_classes = [permissions.AllowAny]
 
     def list(self, request, *args, **kwargs):
@@ -88,7 +92,7 @@ class WomensProductPIView(generics.ListAPIView):
 
 class KidsProductPIView(generics.ListAPIView):
     serializer_class = KidsProductSerializer
-    queryset = Product.objects.all()
+    queryset = Category.objects.all()
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
@@ -113,4 +117,33 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
     serializer_class = ProductDetailSerializer
     queryset = Product.objects.all()
     permission_classes = [permissions.AllowAny]
-    lookup_field = 'slug_title'
+    lookup_field = "slug_title"
+
+    def get_queryset(self):
+        return super().get_queryset()
+
+        
+class CreateWishListAPIView(generics.CreateAPIView):
+    serializer_class = WishListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            product_id  = request.data.get('product_id')
+            print(product_id)
+            product = get_object_or_404(Product, hash_id=product_id)
+
+            _ = WishList.objects.create(wisher=user, product=product)
+            message = {'detail': "Added product to wishlist"}
+            return Response(message, status=status.HTTP_201_CREATED)
+
+class ListWishListAPIView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ListWishSerializer
+    queryset = WishList.objects.all()
+    
+
+class RemoveWishListAPIView(generics.DestroyAPIView):
+    pass
+

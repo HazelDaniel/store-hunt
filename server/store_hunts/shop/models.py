@@ -48,14 +48,25 @@ class Rating(models.Model):
         db_table = "rating"
 
 
+# class WishList(models.Model):
+#     hash_id = HashidsField(
+#         real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
+#     )
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     created_at = models.DateTimeField(auto_now_add=True)
+
+#     class Meta:
+#         db_table = "wish_list"
+
+
 class WishList(models.Model):
     hash_id = HashidsField(
         real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    products = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
+    wisher = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ("user", "products")
+        unique_together = ('product', 'wisher')
         db_table = "wish_list"

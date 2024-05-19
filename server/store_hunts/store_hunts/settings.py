@@ -20,11 +20,6 @@ import django
 from .config import (
     DB,
     DBUSER,
-    EMAIL_HOST,
-    EMAIL_HOST_PASSWORD,
-    EMAIL_HOST_USER,
-    EMAIL_PORT,
-    EMAIL_USE_TLS,
     PASSWORD,
     PORT,
 )
@@ -67,6 +62,8 @@ INSTALLED_APPS = [
     "accounts",
     "products",
     "shop",
+    # aws s3
+    "storages",
 ]
 
 # handle force text error
@@ -91,7 +88,7 @@ ROOT_URLCONF = "store_hunts.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'accounts' / 'templates' / 'mail'],
+        "DIRS": [BASE_DIR / "accounts" / "templates" / "mail"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -183,9 +180,9 @@ MEDIA_ROOT = str(BASE_DIR / "media")
 
 
 EMAIL_BACKEND = "django_mailgun_mime.backends.MailgunMIMEBackend"
-MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY')
-MAILGUN_DOMAIN_NAME = 'mg.velolend.me'
-EMAIL_HOST_USER="storehunt@mg.velolend.me"
+MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")
+MAILGUN_DOMAIN_NAME = "mg.velolend.me"
+EMAIL_HOST_USER = "storehunt@mg.velolend.me"
 # EMAIL_HOST = EMAIL_HOST
 # EMAIL_PORT = int(EMAIL_PORT)
 # EMAIL_HOST_USER = EMAIL_HOST_USER
@@ -205,7 +202,7 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=10),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=5),
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
@@ -225,5 +222,20 @@ SPECTACULAR_SETTINGS = {
 }
 
 
-# setup scrapy
 DJANGO_HASHIDS_SALT = os.environ["HASHIDS"]
+
+## aws s3 bucket config
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_ACCESS_SECRET_KEY")
+
+AWS_STORAGE_BUCKET_NAME = "storehunt-bucket"
+AWS_S3_FILE_OVERWRITE = False
+AWS_S3_CUSTOM_DOMAIN = "%s.s3.amazonaws.com" % AWS_STORAGE_BUCKET_NAME
+
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {"BACKEND": "storages.backends.s3.S3Storage"},
+}

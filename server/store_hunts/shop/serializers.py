@@ -1,11 +1,9 @@
-import base64
-
 from django.db.models import Avg
-from products.models import Category, Product, ProductItem, Brand
+from rest_framework.reverse import reverse
+from products.models import Brand, Category, Product, ProductItem
 from rest_framework import serializers
 from rest_framework_recursive.fields import RecursiveField
-
-from .models import Rating, Review
+from .models import Rating, Review, WishList
 
 
 def get_all_subcategories(category):
@@ -85,27 +83,35 @@ class ListProductSerializer(serializers.ModelSerializer):
     avg_rating = serializers.SerializerMethodField(read_only=True)
     price = serializers.SerializerMethodField(read_only=True)
     image = serializers.SerializerMethodField(read_only=True)
+    url = serializers.HyperlinkedIdentityField(
+        view_name="product-detail", lookup_field="slug_title", read_only=True
+    )
 
     class Meta:
         model = Product
-        fields = ["id", "title", "image", "avg_rating", "price"]
+        print('-----meta')
+        fields = ["id", "title", "image", "avg_rating", "price", "url"]
+        
+    def to_representation(self, instance):
+        print(instance)
+        return super().to_representation(instance)
 
     def get_avg_rating(self, obj):
         rating = Rating.objects.filter(product=obj).aggregate(avg_rating=Avg("rating"))[
             "avg_rating"
         ]
-
-        # if not rating:
-        #     return 0
-        return rating
+        print(rating)
+        return rating or 0
 
     def get_price(self, obj):
         price = obj.product_detail.first().price
+        print(price)
         return price
 
     def get_image(self, obj):
         product_image = obj.product_detail.first().product_image.first()
         image = product_image.image.url
+        print(image)
         return image
 
 
@@ -121,51 +127,57 @@ class MensProductSerializer(serializers.ModelSerializer):
 
     def get_product(self, obj):
         products = get_products_by_top_level_category(obj.name)
-        return ListProductSerializer(products, many=True).data
+        request = self.context.get("request")
+        return ListProductSerializer(
+            products, many=True, context={"request": request}
+        ).data
 
     def get_product_count(self, obj):
         products = get_products_by_top_level_category(obj)
         return products.count()
 
 
-class WomenProductSerializer(serializers.ModelSerializer):
-    id = serializers.SlugField(source="hash_id")
-    product = serializers.SerializerMethodField()
-    product_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Category
-        fields = ("id", "name", "product", "product_count")
-
-    def get_product(self, obj):
-        products = get_products_by_top_level_category(obj.name)
-        return ListProductSerializer(products, many=True).data
-
-    def get_product_count(self, obj):
-        products = get_products_by_top_level_category(obj)
-        return products.count()
-
-
-class KidsProductSerializer(serializers.ModelSerializer):
-    id = serializers.SlugField(source="hash_id")
-    product = serializers.SerializerMethodField()
-    product_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Category
-        fields = ("id", "name", "product", "product_count")
-
-    def get_product(self, obj):
-        products = get_products_by_top_level_category(obj.name)
-        return ListProductSerializer(products, many=True).data
-
-    def get_product_count(self, obj):
-        products = get_products_by_top_level_category(obj)
-        return products.count()
-
-
-class UnisexProductSerializer(ListProductSerializer):
+class WomenProductSerializer(MensProductSerializer):
     pass
+    # id = serializers.SlugField(source="hash_id")
+    # product = serializers.SerializerMethodField()
+    # product_count = serializers.SerializerMethodField()
+
+    # class Meta:
+    #     model = Category
+    #     fields = ("id", "name", "product", "product_count")
+
+    # def get_product(self, obj):
+    #     products = get_products_by_top_level_category(obj.name)
+    #     return ListProductSerializer(
+    #         products, many=True, context={"request": self.request}
+    #     ).data
+
+    # def get_product_count(self, obj):
+    #     products = get_products_by_top_level_category(obj)
+    #     return products.count()
+
+
+class KidsProductSerializer(MensProductSerializer):
+    pass
+    # id = serializers.SlugField(source="hash_id")
+    # product = serializers.SerializerMethodField()
+    # product_count = serializers.SerializerMethodField()
+
+    # class Meta:
+    #     model = Category
+    #     fields = ("id", "name", "product", "product_count")
+
+    # def get_product(self, obj):
+    #     products = get_products_by_top_level_category(obj.name)
+    #     return ListProductSerializer(products, many=True).data
+
+    # def get_product_count(self, obj):
+    #     products = get_products_by_top_level_category(obj)
+    #     return products.count()
+
+
+
 
 class BrandSerializer(serializers.ModelSerializer):
     # id = serializers.SlugField(source="hash_id")
@@ -217,6 +229,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     brand = BrandSerializer(read_only=True)
     product_detail = ProductItemSerializer(read_only=True, many=True)
     avg_rating = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = (
@@ -235,3 +248,31 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "avg_rating"
         ]
         return rating
+
+
+
+class WishListSerializer(serializers.ModelSerializer):
+    product_id = serializers.SlugField(source="hash_id", read_only=True)
+    class Meta:
+        model = WishList
+        fields = ('product_id',)
+
+class ListProductSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        
+        
+    def get_price(self, obj):
+        price = obj.product_detail.first().price
+        return price
+class ListWishSerializer(serializers.ModelSerializer):
+    id = serializers.SlugField(source='hash_id')
+    product = ListProductSerializer(read_only=True)
+    class Meta:
+        model = WishList
+        fields = ('id', 'product')
+    
+    

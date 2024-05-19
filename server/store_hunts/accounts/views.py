@@ -15,7 +15,7 @@ from rest_framework.request import HttpRequest
 from rest_framework.response import Response
 from rest_framework.serializers import SerializerMetaclass
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from django.conf import settings
+
 from store_hunts.config import DOMAIN
 
 from .models import Buyer, Sellers

@@ -24,6 +24,7 @@ from .serializers import (
     ProductCreateSerializer,
     ProductVariationSerializer,
 )
+from accounts.utils import create_slug
 
 # Create your views here.
 
@@ -46,7 +47,7 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
                 "price": data.pop("price"),
                 "qty_in_stock": data.pop("quantity"),
             }
-            slug_title = data.get("title").replace(" ", "-")
+            slug_title = create_slug(data.get("title"))
             # create the parent key for the self reference
             parent_category, _ = Category.objects.get_or_create(name=section)
             # handle self referencing relationship  in category
@@ -112,8 +113,9 @@ class UpdateProductAPIView(generics.UpdateAPIView, SellerPermissionMixin):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
             data = serializer.validated_data
-            instance.name = data["name"]
-            instance.description = data["description"]
+            instance.name = data.get("title")
+            instance.description = data.get("description")
+            instance.slug_item = create_slug(data.get("title"))
             # product item
             product_item = get_object_or_404(ProductItem, product=instance)
             product_item.price = data["price"]

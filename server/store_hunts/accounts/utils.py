@@ -1,6 +1,6 @@
 import io
 import re
-
+from django.utils.text import slugify
 import requests
 import six
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -71,3 +71,14 @@ def load_image(image_url: str) -> ContentFile:
 
     return image_content
 
+
+def create_slug(title):
+    """
+    Creates a slug by converting the title to a URL-friendly format.
+    """
+    # Remove any character that is not a letter, digit, or whitespace
+    cleaned_title = re.sub(r"[^a-zA-Z0-9\s]", "", title)
+    # Replace multiple spaces with a single space
+    cleaned_title = re.sub(r"\s+", " ", cleaned_title).strip()
+    # Convert to lowercase and replace spaces with hyphens
+    return slugify(cleaned_title)
