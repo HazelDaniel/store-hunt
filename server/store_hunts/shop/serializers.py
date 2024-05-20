@@ -257,20 +257,19 @@ class WishListSerializer(serializers.ModelSerializer):
         model = WishList
         fields = ('product_id',)
 
-class ListProductSerializer(serializers.Serializer):
+class ListProdSerializer(serializers.Serializer):
     title = serializers.CharField()
     price = serializers.SerializerMethodField()
-
     class Meta:
         model = Product
-        
-        
+ 
     def get_price(self, obj):
         price = obj.product_detail.first().price
         return price
+
 class ListWishSerializer(serializers.ModelSerializer):
     id = serializers.SlugField(source='hash_id')
-    product = ListProductSerializer(read_only=True)
+    product = ListProdSerializer(read_only=True)
     class Meta:
         model = WishList
         fields = ('id', 'product')
