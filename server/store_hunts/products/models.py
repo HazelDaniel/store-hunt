@@ -42,6 +42,7 @@ class Product(models.Model):
         Brand, on_delete=models.PROTECT, related_name="product_brand"
     )
     seller = models.ForeignKey(Sellers, on_delete=models.CASCADE)
+
     class Meta:
         ordering = ["-created_at"]
         db_table = "product"

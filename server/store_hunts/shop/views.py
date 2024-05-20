@@ -16,13 +16,16 @@ from .serializers import (
     WomenProductSerializer,
     WishListSerializer,
     ListWishSerializer,
+    RemoveWishlistSerializer,
+    EditReviewSerializer,
+    RemoveReviewRatingSerializer,
 )
 
 
 class CreateReviewAPIView(generics.GenericAPIView):
     serializer_class = CreateReviewRatingSerializer
     # lookup_field = 'id'
-    permission_classes = [UserNotProductOwnerPermission]
+    permission_classes = [permissions.IsAuthenticated, UserNotProductOwnerPermission]
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
@@ -46,19 +49,59 @@ class CreateReviewAPIView(generics.GenericAPIView):
 class ListAllProductReview(generics.ListAPIView):
     serializer_class = ListReviewRatingSerializer
     permission_classes = [permissions.AllowAny]
-    queryset = Product.objects.all()
+    queryset = Review.objects.all()
     lookup_field = "hash_id"
 
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        product_id = self.kwargs.get("hash_id")
+        review = Review.objects.filter(product__hash_id=product_id)
+        return review
+
+
+class EditReviewRatingProductAPIView(generics.UpdateAPIView):
+    serializer_class = EditReviewSerializer
+    permission_classes = [permissions.IsAuthenticated, UserNotProductOwnerPermission]
+    queryset = Review.objects.all()
+    lookup_field = "hash_id"
+    # http_method_names = ['PUT']
+
+
+    def update(self, request, *args, **kwargs):
+        print('boom')
+        product_id = self.kwargs.get('hash_id')
+        instance = get_object_or_404(Review, product__hash_id=product_id)
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            data = serializer.validated_data
+            rating = get_object_or_404(Rating, review=instance)
+            instance.text = data.get("text")
+            rating.rating = data.get("rating")
+            instance.save()
+            rating.save()
+            message = {"message": "rating updated successfully"}
+            return Response(message, status=status.HTTP_200_OK)
+
+    def get_queryset(self):
+        product_id = self.kwargs["hash_id"]
+        review = Review.objects.filter(
+            product__hash_id=product_id, user=self.request.user
+        )
+        return review
+
+#TODO creat user delete review api view 
+class DeleteReviewRating(generics.DestroyAPIView):
+    pass
 
 
 class ListProduct(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
     queryset = Product.objects.all()
     serializer_class = ListProductSerializer
- 
-    
+
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
@@ -100,19 +143,6 @@ class KidsProductPIView(generics.ListAPIView):
         return category
 
 
-# class UnisexProductPIView(generics.ListAPIView):
-#     serializer_class = UnisexProductSerializer
-#     queryset = Product.objects.all()
-#     permission_classes = [permissions.AllowAny]
-
-#     def list(self, request, *args, **kwargs):
-#         return super().list(request, *args, **kwargs)
-#     def get_queryset(self):
-#         category = Category.objects.get(name="unisex")
-#         product = Product.objects.filter(category__parent=category)
-#         return product
-
-
 class ProductDetailAPIView(generics.RetrieveAPIView):
     serializer_class = ProductDetailSerializer
     queryset = Product.objects.all()
@@ -122,28 +152,44 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
     def get_queryset(self):
         return super().get_queryset()
 
-        
+
 class CreateWishListAPIView(generics.CreateAPIView):
     serializer_class = WishListSerializer
     permission_classes = [permissions.IsAuthenticated]
+
     def create(self, request, *args, **kwargs):
         user = request.user
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            product_id  = request.data.get('product_id')
+            product_id = request.data.get("product_id")
             print(product_id)
             product = get_object_or_404(Product, hash_id=product_id)
 
             _ = WishList.objects.create(wisher=user, product=product)
-            message = {'detail': "Added product to wishlist"}
+            message = {"detail": "Added product to wishlist"}
             return Response(message, status=status.HTTP_201_CREATED)
+
 
 class ListWishListAPIView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ListWishSerializer
     queryset = WishList.objects.all()
-    
+
+    def get_queryset(self):
+        wish_list = WishList.objects.filter(wisher=self.request.user)
+        return wish_list
+
 
 class RemoveWishListAPIView(generics.DestroyAPIView):
-    pass
+    serializer_class = RemoveWishlistSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = WishList.objects.all()
+    lookup_field = "hash_id"
 
+    def get_queryset(self):
+        wish_list = WishList.objects.filter(wisher=self.request.user)
+        return wish_list
+
+#TODO create related product view
+class RelatedProductAPIView(generics.ListAPIView):
+    pass

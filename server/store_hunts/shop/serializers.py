@@ -51,31 +51,45 @@ class CreateReviewRatingSerializer(serializers.Serializer):
         return value
 
 
-class ReviewSerializer(serializers.Serializer):
-
-    def to_representation(self, instance):
-        rating = None
-        rating_review = instance.rating_review.get()
-        if rating_review:
-            rating = rating_review.rating
-        return {"id": instance.hash_id, "text": instance.text, "rating": rating}
-
-    id = serializers.SlugField(source="hash_id")
-    text = serializers.CharField()
-
-
-# class RatingSerializer(serializers.Serializer):
-#     id = serializers.IntegerField()
+class RatingSerializer(serializers.Serializer):
+    rating = serializers.IntegerField()
 
 
 class ListReviewRatingSerializer(serializers.ModelSerializer):
-    review_rating = ReviewSerializer(source="product_review", many=True)
+    rating = serializers.SerializerMethodField()
+    product_id = serializers.SlugField(source="product.hash_id")
     id = serializers.SlugField(source="hash_id")
 
     class Meta:
-        model = Product
-        fields = ["id", "review_rating"]
+        model = Review
+        fields = ["id", "text", "rating", 'product_id']
 
+    def get_rating(self, obj):
+        rating = obj.rating
+        if rating:
+            return rating.get().rating
+        return None
+
+
+class EditReviewSerializer(serializers.ModelSerializer):
+    id = serializers.SlugField(source="hash_id", read_only=True)
+    rating = serializers.IntegerField()
+    class Meta:
+        model = Review
+        fields = ("id", "text", "rating")
+
+    def validate_rating(self, value):
+        if value < 0:
+            raise serializers.ValidationError("rating cannot be less than 0")
+        elif value > 5:
+            raise serializers.ValidationError("rating cannot be greater than 5")
+        return value
+
+
+class RemoveReviewRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = '__all__'
 
 class ListProductSerializer(serializers.ModelSerializer):
     id = serializers.SlugField(source="hash_id")
@@ -89,9 +103,8 @@ class ListProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        print('-----meta')
         fields = ["id", "title", "image", "avg_rating", "price", "url"]
-        
+
     def to_representation(self, instance):
         print(instance)
         return super().to_representation(instance)
@@ -177,8 +190,6 @@ class KidsProductSerializer(MensProductSerializer):
     #     return products.count()
 
 
-
-
 class BrandSerializer(serializers.ModelSerializer):
     # id = serializers.SlugField(source="hash_id")
     brand = serializers.CharField(source="name")
@@ -250,28 +261,36 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         return rating
 
 
-
 class WishListSerializer(serializers.ModelSerializer):
     product_id = serializers.SlugField(source="hash_id", read_only=True)
+
     class Meta:
         model = WishList
-        fields = ('product_id',)
+        fields = ("product_id",)
+
 
 class ListProdSerializer(serializers.Serializer):
     title = serializers.CharField()
     price = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
- 
+
     def get_price(self, obj):
         price = obj.product_detail.first().price
         return price
 
+
 class ListWishSerializer(serializers.ModelSerializer):
-    id = serializers.SlugField(source='hash_id')
+    id = serializers.SlugField(source="hash_id")
     product = ListProdSerializer(read_only=True)
+
     class Meta:
         model = WishList
-        fields = ('id', 'product')
-    
-    
+        fields = ("id", "product")
+
+
+class RemoveWishlistSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WishList
+        fields = "__all__"

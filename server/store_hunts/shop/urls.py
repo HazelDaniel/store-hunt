@@ -13,6 +13,11 @@ urlpatterns = [
         views.ListAllProductReview.as_view(),
         name="list-review",
     ),
+    path(
+        "edit-review/<slug:hash_id>/product",
+        views.EditReviewRatingProductAPIView.as_view(),
+        name="edit-review",
+    ),
     path("shop", views.ListProduct.as_view(), name="list-product"),
     path("men-fashion-store/", views.MensProductPIView.as_view(), name="men-product"),
     path(
@@ -31,6 +36,11 @@ urlpatterns = [
         name="product-detail",
     ),
     # user wish list urls
-    path('wishlist/', views.CreateWishListAPIView.as_view(), name='create-wish-list'),
-    path('wishlist', views.ListWishListAPIView.as_view(), name='wish-list')
+    path("wishlist/", views.CreateWishListAPIView.as_view(), name="create-wish-list"),
+    path("wishlist", views.ListWishListAPIView.as_view(), name="wish-list"),
+    path(
+        "wishlist/<slug:hash_id>",
+        views.RemoveWishListAPIView.as_view(),
+        name="remove-wish-list",
+    ),
 ]

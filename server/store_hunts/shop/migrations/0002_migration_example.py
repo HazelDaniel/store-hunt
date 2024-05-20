@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-               migrations.CreateModel(
+        migrations.CreateModel(
             name="Review",
             fields=[
                 (

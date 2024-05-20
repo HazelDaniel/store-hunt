@@ -35,12 +35,12 @@ class Rating(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(5)]
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_rating")
-    product = models.ForeignKey(
+    product = models.OneToOneField(
         Product, on_delete=models.CASCADE, related_name="rating"
     )
     created_at = models.DateField(auto_now_add=True)
     review = models.ForeignKey(
-        Review, on_delete=models.CASCADE, null=True, related_name="rating_review"
+        Review, on_delete=models.CASCADE, null=True, related_name="rating"
     )
 
     class Meta:
@@ -68,5 +68,5 @@ class WishList(models.Model):
     wisher = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('product', 'wisher')
+        unique_together = ("product", "wisher")
         db_table = "wish_list"

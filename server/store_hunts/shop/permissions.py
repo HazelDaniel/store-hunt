@@ -13,7 +13,4 @@ class UserNotProductOwnerPermission(BasePermission):
             if product:
                 product_owner = product.product_owner(seller)
 
-        val = (
-            request.user.is_authenticated and not product_owner
-        ) and not request.user.is_superuser
-        return val
+        return not product_owner and not request.user.is_superuser
