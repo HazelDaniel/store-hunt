@@ -20,11 +20,6 @@ import django
 from .config import (
     DB,
     DBUSER,
-    EMAIL_HOST,
-    EMAIL_HOST_PASSWORD,
-    EMAIL_HOST_USER,
-    EMAIL_PORT,
-    EMAIL_USE_TLS,
     PASSWORD,
     PORT,
 )
@@ -67,8 +62,8 @@ INSTALLED_APPS = [
     "accounts",
     "products",
     "shop",
-    # scrapy app
-    "productscraper",
+    # aws s3
+    "storages",
 ]
 
 # handle force text error
@@ -93,7 +88,7 @@ ROOT_URLCONF = "store_hunts.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "accounts" / "templates" / "mail"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -168,9 +163,9 @@ AUTH_USER_MODEL = "accounts.User"
 
 
 # Configuring restframework
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ("dj_rest_auth.jwt_auth.JWTCookieAuthentication",)
-}
+# REST_FRAMEWORK = {
+#     "DEFAULT_AUTHENTICATION_CLASSES": ("dj_rest_auth.jwt_auth.JWTCookieAuthentication",)
+# }
 
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
@@ -184,27 +179,30 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = str(BASE_DIR / "media")
 
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = EMAIL_HOST
-EMAIL_PORT = EMAIL_PORT
-EMAIL_HOST_USER = EMAIL_HOST_USER
-EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
-EMAIL_USE_TLS = EMAIL_USE_TLS
-
+EMAIL_BACKEND = "django_mailgun_mime.backends.MailgunMIMEBackend"
+MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")
+MAILGUN_DOMAIN_NAME = "mg.velolend.me"
+EMAIL_HOST_USER = "storehunt@mg.velolend.me"
+# EMAIL_HOST = EMAIL_HOST
+# EMAIL_PORT = int(EMAIL_PORT)
+# EMAIL_HOST_USER = EMAIL_HOST_USER
+# EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
+# EMAIL_USE_TLS = EMAIL_USE_TLS
 SITE_ID = 1
-
 
 # rest_framework default settings
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 10,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=10),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=5),
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
@@ -224,5 +222,20 @@ SPECTACULAR_SETTINGS = {
 }
 
 
-# setup scrapy
-DJANGO_HASHIDS_SALT = os.environ['HASHIDS']
+DJANGO_HASHIDS_SALT = os.environ["HASHIDS"]
+
+## aws s3 bucket config
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_ACCESS_SECRET_KEY")
+
+AWS_STORAGE_BUCKET_NAME = "storehunt-bucket"
+AWS_S3_FILE_OVERWRITE = False
+AWS_S3_CUSTOM_DOMAIN = "%s.s3.amazonaws.com" % AWS_STORAGE_BUCKET_NAME
+
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {"BACKEND": "storages.backends.s3.S3Storage"},
+}

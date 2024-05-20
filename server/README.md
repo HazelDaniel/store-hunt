@@ -13,8 +13,9 @@ Welcome to the backend repository for Store Hunts, an e-commerce website.
    ```
    pip install -r requirements.txt
    ```
+3. **Setup Postgres as your db**
 
-3. **Environment Variables**:
+4. **Environment Variables**:
    Create a `.env` file in the root directory and add the following environment variables:
    ```plaintext
    DBUSER=<your_database_username>
@@ -35,7 +36,7 @@ Welcome to the backend repository for Store Hunts, an e-commerce website.
 
 ## Features
 
-- **User Authentication**: Secure authentication system for user login and registration.
+- **User Authentication**: Secure authentication system for user login (JWT token) and registration.
 - **Product Management**: CRUD operations for managing product listings.
 - **Order Processing**: Facilitates order placement, tracking, and management.
 - **Payment Integration**: Seamless integration with payment gateways for secure transactions.

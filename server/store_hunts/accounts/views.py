@@ -55,7 +55,7 @@ class UserRegistrationAPIView(generics.CreateAPIView):
                 "user": user.is_seller,
             }
             subject = "Verification Email"
-            send_email(subject, "support@storehunt.com", user.email, context)
+            send_email(subject, settings.EMAIL_HOST_USER, user.email, context)
             return Response(
                 {
                     "status": 201,
@@ -90,7 +90,7 @@ class SellerRegistrationAPIView(generics.CreateAPIView):
                 "seller": user.is_seller,
             }
             subject = "Verification Email"
-            send_email(subject, "support@storehunt.com", user.email, context)
+            send_email(subject, settings.EMAIL_HOST_USER, user.email, context)
             return Response(
                 {
                     "status": 201,
