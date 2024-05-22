@@ -9,7 +9,7 @@ if os.environ["DEBUG"] == "1":
     PORT = 5432
 
     # DOMAIN
-    DOMAIN = "localhost:8000"
+    DOMAIN = "google.com"
 else:
     # email config for mailgun
     # database config
