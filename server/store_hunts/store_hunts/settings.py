@@ -32,7 +32,13 @@ SECRET_KEY = os.environ.get("SECRET_KEYS")
 # SECURITY WARNING: don't run with debug turned on in production!
 
 DEBUG = os.environ.get("DEBUG") == "1"
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'store-hunt-1.onrender.com']
+
+ALLOWED_HOSTS = []
+if DEBUG:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', ]
+
+else:
+    ALLOWED_HOSTS = ['store-hunt-1.onrender.com']
 
 # Application definition
 
@@ -190,6 +196,9 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",

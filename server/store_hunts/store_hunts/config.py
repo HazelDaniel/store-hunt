@@ -9,7 +9,7 @@ if os.environ["DEBUG"] == "1":
     PORT = 5432
 
     # DOMAIN
-    DOMAIN = "google.com"
+    DOMAIN = "https://store-hunt-1.onrender.com"
 else:
     # email config for mailgun
     # database config
@@ -19,4 +19,4 @@ else:
     PORT = int(os.environ.get("PORT"))
 
     # DOMAIN
-    DOMAIN = None
+    DOMAIN = "https://store-hunt-1.onrender.com"
