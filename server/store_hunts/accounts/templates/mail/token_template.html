@@ -1,13 +1,46 @@
-{% extends 'mail/forgot_password.html' %}
-
-
-{% block head %}Store Hunts{% endblock %}
-
-
-{% block header %} Email Verification {% endblock %}
-{% block content %}Hi {{ name }} please click on this link below to verify your account {% endblock %}
-
-
-<a href="{% block domain %} {{ domain }}{% url 'activate' uidb64=uid64 token=token %} {% endblock %}">
-{% block link %}Verify Email {% endblock %}
-</a>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset | Store Hunt</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div class="main-template-wrapper">
+        <h1>Store Hunt</h1>
+        <div class="p-6">
+            <div class="font-semibold text-2xl">Email Verification</div>
+            <div class="text-gray-500 my-4">
+                <p>Hi John Bull, please click the button below to verify your account:</p>
+            </div>
+            <div class="my-4">
+                <a href="{{ domain }}{% url 'activate' uidb64=uid64 token=token %}" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8">
+                        Verify Email
+                    </a>
+            </div>
+            <div class="text-gray-500 my-6">
+                <p>If you did not request this verification, please ignore this email or contact support.</p>
+            </div>
+            <hr>
+            <div class="mt-6 border-t border-gray-200 dark:border-gray-800 pt-6 grid grid-cols-1 gap-2 text-sm">
+                <div class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 opacity-50">
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <span>1234 Street Rd, City, ABC 56789, USA</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 opacity-50">
+                        <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"></path>
+                        <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"></path>
+                    </svg>
+                    <a href="#" class="underline">support@storehunt.com</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

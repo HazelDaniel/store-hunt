@@ -196,8 +196,9 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
 
+
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=10),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=10) if DEBUG else timedelta(minutes=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=5),
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
@@ -242,7 +243,7 @@ if os.environ.get("USE_S3") == "True" or DEBUG:
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
         },
-        "staticfiles": {"backend": "storages.backends.s3.s3storage"},
+        "staticfiles": {"BACKEND": "storages.backends.s3.S3Storage"},
     }
     # Static files (CSS, JavaScript, images)
     STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
