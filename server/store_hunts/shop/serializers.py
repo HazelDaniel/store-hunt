@@ -1,8 +1,9 @@
 from django.db.models import Avg
-from rest_framework.reverse import reverse
 from products.models import Brand, Category, Product, ProductItem
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 from rest_framework_recursive.fields import RecursiveField
+
 from .models import Rating, Review, WishList
 
 
@@ -62,7 +63,7 @@ class ListReviewRatingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ["id", "text", "rating", 'product_id']
+        fields = ["id", "text", "rating", "product_id"]
 
     def get_rating(self, obj):
         rating = obj.rating
@@ -74,6 +75,7 @@ class ListReviewRatingSerializer(serializers.ModelSerializer):
 class EditReviewSerializer(serializers.ModelSerializer):
     id = serializers.SlugField(source="hash_id", read_only=True)
     rating = serializers.IntegerField()
+
     class Meta:
         model = Review
         fields = ("id", "text", "rating")
@@ -89,7 +91,8 @@ class EditReviewSerializer(serializers.ModelSerializer):
 class RemoveReviewRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = '__all__'
+        fields = "__all__"
+
 
 class ListProductSerializer(serializers.ModelSerializer):
     id = serializers.SlugField(source="hash_id")
@@ -97,35 +100,32 @@ class ListProductSerializer(serializers.ModelSerializer):
     avg_rating = serializers.SerializerMethodField(read_only=True)
     price = serializers.SerializerMethodField(read_only=True)
     image = serializers.SerializerMethodField(read_only=True)
+    brand = serializers.SerializerMethodField(read_only=True)
     url = serializers.HyperlinkedIdentityField(
         view_name="product-detail", lookup_field="slug_title", read_only=True
     )
 
     class Meta:
         model = Product
-        fields = ["id", "title", "image", "avg_rating", "price", "url"]
-
-    def to_representation(self, instance):
-        print(instance)
-        return super().to_representation(instance)
+        fields = ["id", "title", "image", "avg_rating", "price", "url", "brand"]
 
     def get_avg_rating(self, obj):
         rating = Rating.objects.filter(product=obj).aggregate(avg_rating=Avg("rating"))[
             "avg_rating"
         ]
-        print(rating)
         return rating or 0
 
     def get_price(self, obj):
         price = obj.product_detail.first().price
-        print(price)
         return price
 
     def get_image(self, obj):
         product_image = obj.product_detail.first().product_image.first()
         image = product_image.image.url
-        print(image)
         return image
+
+    def get_brand(self, obj):
+        return obj.brand.name
 
 
 class MensProductSerializer(serializers.ModelSerializer):
@@ -214,14 +214,14 @@ class ImageSerializer(serializers.Serializer):
 
 
 class ProductItemSerializer(serializers.ModelSerializer):
-    # id = serializers.SlugField(source="hash_id")
+    id = serializers.SlugField(source="hash_id")
     quantity = serializers.IntegerField(source="qty_in_stock")
     image = ImageSerializer(source="product_image", read_only=True, many=True)
     product_attribute = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ProductItem
-        fields = ["price", "quantity", "product_attribute", "image"]
+        fields = ["id", "price", "quantity", "product_attribute", "image"]
 
     def get_product_attribute(self, obj):
         variations = obj.variation.all()
@@ -293,4 +293,10 @@ class ListWishSerializer(serializers.ModelSerializer):
 class RemoveWishlistSerializer(serializers.ModelSerializer):
     class Meta:
         model = WishList
+        fields = "__all__"
+
+
+class DeleteReviewRating(serializers.ModelSerializer):
+    class Meta:
+        model = Review
         fields = "__all__"

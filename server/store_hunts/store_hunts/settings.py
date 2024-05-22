@@ -16,13 +16,8 @@ from datetime import timedelta
 from pathlib import Path
 
 import django
-
-from .config import (
-    DB,
-    DBUSER,
-    PASSWORD,
-    PORT,
-)
+import dj_database_url
+from .config import DB, DBUSER, PASSWORD, PORT
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,7 +44,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    # third party api
     # third party application
     "rest_framework",
     "rest_framework_simplejwt",
@@ -57,11 +51,13 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "django_filters",
     # social auth setup
     # internal applications
     "accounts",
     "products",
     "shop",
+    "cart",
     # aws s3
     "storages",
 ]
@@ -74,6 +70,7 @@ django.utils.encoding.force_text = force_str
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -107,15 +104,21 @@ WSGI_APPLICATION = "store_hunts.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+# print(os.environ.get('DATABASE_URL'))
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": DB,
-        "USER": DBUSER,
-        "PASSWORD": PASSWORD,
-        "PORT": PORT,
-    }
+    "default": dj_database_url.config(default=os.environ.get('DATABASE_URL'))
 }
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": DB,
+#         "USER": DBUSER,
+#         "PASSWORD": PASSWORD,
+#         "PORT": PORT,
+#     }
+# }
 
 
 # Password validation
@@ -175,19 +178,11 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.ScryptPasswordHasher",
 ]
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = str(BASE_DIR / "media")
-
 
 EMAIL_BACKEND = "django_mailgun_mime.backends.MailgunMIMEBackend"
 MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")
 MAILGUN_DOMAIN_NAME = "mg.velolend.me"
 EMAIL_HOST_USER = "storehunt@mg.velolend.me"
-# EMAIL_HOST = EMAIL_HOST
-# EMAIL_PORT = int(EMAIL_PORT)
-# EMAIL_HOST_USER = EMAIL_HOST_USER
-# EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
-# EMAIL_USE_TLS = EMAIL_USE_TLS
 SITE_ID = 1
 
 # rest_framework default settings
@@ -198,6 +193,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
 
 SIMPLE_JWT = {
@@ -224,18 +220,48 @@ SPECTACULAR_SETTINGS = {
 
 DJANGO_HASHIDS_SALT = os.environ["HASHIDS"]
 
-## aws s3 bucket config
-AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_ACCESS_SECRET_KEY")
 
-AWS_STORAGE_BUCKET_NAME = "storehunt-bucket"
-AWS_S3_FILE_OVERWRITE = False
-AWS_S3_CUSTOM_DOMAIN = "%s.s3.amazonaws.com" % AWS_STORAGE_BUCKET_NAME
+if os.environ.get("USE_S3") == "True" or DEBUG:
+    ## aws s3 bucket config
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_ACCESS_SECRET_KEY")
+
+    AWS_S3_REGION_NAME = "eu-west-2"
+    AWS_STORAGE_BUCKET_NAME = "storehunt-bucket"
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_CUSTOM_DOMAIN = (
+        f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+    )
+    AWS_DEFAULT_ACL = "public-read"
+    AWS_QUERYSTRING_AUTH = False
+    AWS_HEADERS = {
+        "Access-Control-Allow-Origin": "*",
+    }
+    # aws static and media file setting
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+        "staticfiles": {"backend": "storages.backends.s3.s3storage"},
+    }
+    # Static files (CSS, JavaScript, images)
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+
+    # Media files
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
 
 
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-    },
-    "staticfiles": {"BACKEND": "storages.backends.s3.S3Storage"},
-}
+else:
+    # media file local setting
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = str(BASE_DIR / "media")
+    # MEDIA_DIRS = (os.path.join(BASE_DIR, "static"),)
+    # static file local setting
+    # STATIC_URL = "/staticfiles/"
+    # STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+    STATIC_URL = "/static/"
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    # Enable the WhiteNoise storage backend, which compresses static files to reduce disk use
+    # and renames the files with unique names for each version to support long-term caching
+    STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

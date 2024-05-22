@@ -25,7 +25,8 @@ urlpatterns = [
     ),
     path("auth/login/", views.UserLoginAPIView.as_view(), name="login"),
     path("auth/logout/", views.LogOutAPIView.as_view(), name="logout"),
-    path("admin/users", views.AllUserAPIView.as_view(), name="all_user"),
+    path("admin/users", views.AllUserAPIView.as_view(), name="all-user"),
+    path("profile-picture/", views.ProfilePicAPIView.as_view(), name="profile-pic"),
     # rest_framework api token
     #  path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     #  path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

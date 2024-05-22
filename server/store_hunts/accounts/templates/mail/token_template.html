@@ -1,18 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification</title>
-</head>
-<body>
-    <h1>Hell Thanks you for signing up at storehunt click the link below to verify</h1> 
-    {{ domain }}{% url 'activate' uidb64=uid64 token=token %}
-</body>
-</html>
-
-{% comment %}
-<!-- {% extends 'mail/forgot_password.html' %}
+{% extends 'mail/forgot_password.html' %}
 
 
 {% block head %}Store Hunts{% endblock %}
@@ -24,5 +10,4 @@
 
 <a href="{% block domain %} {{ domain }}{% url 'activate' uidb64=uid64 token=token %} {% endblock %}">
 {% block link %}Verify Email {% endblock %}
-</a> -->
-{% endcomment %}
+</a>

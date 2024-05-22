@@ -79,9 +79,13 @@ class SellerRegistrationSerializer(UserRegistrationSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    email: str = serializers.EmailField(required=True)
-    password: str = serializers.CharField(write_only=True, required=True)
-    token: str = serializers.SerializerMethodField(read_only=True)
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
+    token = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ["id", "email", "password"]
 
     def validate(self, data):
         email = data.get("email", "")
@@ -93,16 +97,28 @@ class UserLoginSerializer(serializers.Serializer):
             raise AuthenticationFailed(
                 "user account has been disabled contact support team"
             )
-
-        data = {
-            "id": user.id,
-            "email": user.email,
-            "full_name": user.get_name(),
-            "is_seller": user.is_seller,
-            "is_superuser": user.is_superuser,
-            "created_at": user.created_at,
-            "token": user.get_token(),
-        }
+        try:
+            data = {
+                "id": user.hash_id,
+                "email": user.email,
+                "full_name": user.get_name(),
+                "is_seller": user.is_seller,
+                "is_superuser": user.is_superuser,
+                "created_at": user.created_at,
+                "avatar": user.profile_pic.url,
+                "token": user.get_token(),
+            }
+        except ValueError:
+            data = {
+                "id": user.hash_id,
+                "email": user.email,
+                "full_name": user.get_name(),
+                "is_seller": user.is_seller,
+                "is_superuser": user.is_superuser,
+                "created_at": user.created_at,
+                "avatar": None,
+                "token": user.get_token(),
+            }
         return data
 
     def get_token(self, obj):
@@ -119,3 +135,18 @@ class RetrieveAllUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         exclude = ["password"]
+
+
+class ProfilePicSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(
+        source="profile_pic", max_length=1000, allow_empty_file=False, use_url=False
+    )
+
+    class Meta:
+        model = User
+        fields = ["avatar"]
+
+    def update(self, instance, validated_data):
+        instance.profile_pic = validated_data.get("proflie_pic", instance.profile_pic)
+        instance.save()
+        return validated_data

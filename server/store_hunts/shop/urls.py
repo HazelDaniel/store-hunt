@@ -4,29 +4,35 @@ from . import views
 
 urlpatterns = [
     path(
-        "review/<slug:hash_id>/product",
+        "review-rating/add/<slug:hash_id>/product",
         views.CreateReviewAPIView.as_view(),
         name="product-review",
     ),
     path(
-        "reviews/<slug:hash_id>/product",
+        "review-rating/list/<slug:hash_id>/product",
         views.ListAllProductReview.as_view(),
         name="list-review",
     ),
     path(
-        "edit-review/<slug:hash_id>/product",
+        "review-rating/edit/<slug:hash_id>/product",
         views.EditReviewRatingProductAPIView.as_view(),
         name="edit-review",
     ),
-    path("shop", views.ListProduct.as_view(), name="list-product"),
-    path("men-fashion-store/", views.MensProductPIView.as_view(), name="men-product"),
     path(
-        "women-fashion-store/",
+        'review-rating/delete/<slug:hash_id>/product',
+        views.DeleteReviewRating.as_view(), name='delete-review-rating'
+    ),
+    path("shop", views.ListProduct.as_view(), name="list-product"),
+    path(
+        "shop/men-fashion-store/", views.MensProductPIView.as_view(), name="men-product"
+    ),
+    path(
+        "shop/women-fashion-store/",
         views.WomensProductPIView.as_view(),
         name="women-product",
     ),
     path(
-        "kids-fashion-store/",
+        "shop/kids-fashion-store/",
         views.KidsProductPIView.as_view(),
         name="kids-product",
     ),
@@ -42,5 +48,10 @@ urlpatterns = [
         "wishlist/<slug:hash_id>",
         views.RemoveWishListAPIView.as_view(),
         name="remove-wish-list",
+    ),
+    path(
+        "shop/related-product/<slug:hash_id>",
+        views.RelatedProductAPIView.as_view(),
+        name="related-product",
     ),
 ]

@@ -1,6 +1,6 @@
 import io
 import re
-from django.utils.text import slugify
+
 import requests
 import six
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -10,6 +10,7 @@ from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage
 from django.db import connection
 from django.template.loader import render_to_string
+from django.utils.text import slugify
 from PIL import Image
 from rest_framework.exceptions import ValidationError
 
