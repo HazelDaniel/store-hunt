@@ -28,7 +28,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     quantity = serializers.IntegerField(min_value=0, required=True)
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     size = serializers.CharField(max_length=10, required=False)
-    colour = serializers.CharField(max_length=100)
+    colour = serializers.CharField(max_length=100, required=False)
     section = serializers.CharField(
         max_length=7, help_text="section where cloth should fall intoo"
     )
@@ -65,14 +65,6 @@ class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
         fields = ("id", "brand_name")
-
-
-# class ProductVariationSerializer(serializers.ModelSerializer):
-#     product_variation = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = ProductVariation
-#         fields = "product_variation"
 
 
 class CategorySerializer(serializers.ModelSerializer):

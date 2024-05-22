@@ -1,3 +1,4 @@
+import logging
 import uuid
 from sys import exit
 
@@ -15,7 +16,7 @@ from rest_framework.request import HttpRequest
 from rest_framework.response import Response
 from rest_framework.serializers import SerializerMetaclass
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-
+from rest_framework.parsers import FormParser, MultiPartParser
 from store_hunts.config import DOMAIN
 
 from .models import Buyer, Sellers
@@ -25,6 +26,7 @@ from .serializers import (
     SellerRegistrationSerializer,
     UserLoginSerializer,
     UserRegistrationSerializer,
+    ProfilePicSerializer,
 )
 from .utils import generate_token, send_email
 
@@ -154,3 +156,22 @@ class AllUserAPIView(generics.ListAPIView):
     queryset: QuerySet = User.objects.all()
     serializer_class: SerializerMetaclass = RetrieveAllUserSerializer
     permission_classes: list = [permissions.IsAdminUser]
+
+
+class ProfilePicAPIView(generics.UpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ProfilePicSerializer
+    http_method_names = ["patch"]
+    parser_classes = [FormParser, MultiPartParser]
+
+    def patch(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.serializer_class(
+            instance=user, data=request.FILES, partial=True
+        )
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            data = {"avatar": user.profile_pic.url}
+            return Response(data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

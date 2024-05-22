@@ -4,6 +4,8 @@ from .models import Product
 
 
 class IsSellerPermissions(BasePermission):
+    message = "Sellers only"
+
     def has_permission(self, request, view):
         return (
             request.user.is_seller and request.user.is_authenticated

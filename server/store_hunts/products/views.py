@@ -1,4 +1,4 @@
-from accounts.utils import load_image
+from accounts.utils import create_slug, load_image
 from django.conf import settings
 from django.shortcuts import get_list_or_404, get_object_or_404
 from rest_framework import generics, status
@@ -24,7 +24,6 @@ from .serializers import (
     ProductCreateSerializer,
     ProductVariationSerializer,
 )
-from accounts.utils import create_slug
 
 # Create your views here.
 
@@ -42,7 +41,7 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
             uploaded_images = data.pop("upload_image")
             size = data.pop("size", None)
             section = data.pop("section")
-            colour = data.pop("colour")
+            colour = data.pop("colour", None)
             product_items = {
                 "price": data.pop("price"),
                 "qty_in_stock": data.pop("quantity"),
@@ -65,7 +64,8 @@ class CreateProductAPIView(generics.CreateAPIView, SellerPermissionMixin):
                 seller=request.user.seller,
                 slug_title=slug_title
             )
-            colour, _ = Colour.objects.get_or_create(name=colour)
+            if colour:
+                colour, _ = Colour.objects.get_or_create(name=colour)
             product_item = ProductItem.objects.create(**product_items, product=product)
             # store product attribute
             # store image file pth
@@ -131,7 +131,6 @@ class UpdateProductAPIView(generics.UpdateAPIView, SellerPermissionMixin):
                 product_image[i].image = data["upload_image"][i]
                 product_image[i].save()
 
-            # TODO category
             parent_category, ca_c = Category.objects.get_or_create(
                 name=data.get("section")
             )

@@ -128,8 +128,32 @@ class ProductItem(models.Model):
     class Meta:
         db_table = "product_item"
 
+    def deduct_quantity(self, quantity: int = 1) -> int:
+        """
+        deduct product quantity
+        """
+        if self.qty_in_stock > 0 and quantity < self.qty_in_stock:
+            self.qty_in_stock -= quantity
+        else:
+            raise ValueError("Not enough stock available")
+        self.save()
 
-def get_file_path(instance, filename):
+    def check_quantity_available(self, quantity: int) -> bool:
+        """
+        check if user quantity is available
+        """
+        print(self.qty_in_stock > quantity)
+        return self.qty_in_stock > quantity
+
+    def check_quantity_out_of_stock(self):
+        """
+        check if quantity is out of stock
+        """
+        return self.qty_in_stock == 0
+
+
+def get_file_path(instance, filename: int):
+
     return os.path.join(
         "products", "images", f"product_{instance.product_item.product.id}", filename
     )

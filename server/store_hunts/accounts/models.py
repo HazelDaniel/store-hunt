@@ -48,6 +48,12 @@ class UserBaseManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
+def upload_path(instance, filename):
+    return os.path.join(
+        "images", "profile_pic", f"{instance.first_name}_{instance.id}", filename
+    )
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     hash_id = HashidsField(
         real_field_name="id", salt=os.environ["HASHIDS"], min_length=10
@@ -56,9 +62,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email: str = models.CharField(max_length=100, null=False, unique=True)
     last_name: str = models.CharField(max_length=50, null=False)
     created_at: datetime = models.DateTimeField(auto_now_add=True)
-    profile_pic = models.ImageField(
-        upload_to="profile_pic/%Y/%m/%d/", blank=True, null=True
-    )
+    profile_pic = models.ImageField(upload_to=upload_path, blank=True, null=True)
     updated_at: datetime = models.DateTimeField(auto_now=True)
     superuser: bool = models.BooleanField(default=False)
     is_active: bool = models.BooleanField(default=False)
