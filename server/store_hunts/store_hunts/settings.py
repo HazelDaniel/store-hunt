@@ -32,7 +32,13 @@ SECRET_KEY = os.environ.get("SECRET_KEYS")
 # SECURITY WARNING: don't run with debug turned on in production!
 
 DEBUG = os.environ.get("DEBUG") == "1"
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'store-hunt-1.onrender.com']
+
+ALLOWED_HOSTS = []
+if DEBUG:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', ]
+
+else:
+    ALLOWED_HOSTS += ['store-hunt-1.onrender.com']
 
 # Application definition
 
