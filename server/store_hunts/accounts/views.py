@@ -126,7 +126,7 @@ class ActivateAccountApiView(views.View):
 
 
 class UserLoginAPIView(generics.GenericAPIView):
-    serializer_class: SerializerMetaclass = UserLoginSerializer
+    serializer_class = UserLoginSerializer
 
     def post(self, request: HttpRequest) -> Response:
         serializer = self.serializer_class(data=request.data)
@@ -175,3 +175,13 @@ class ProfilePicAPIView(generics.UpdateAPIView):
             return Response(data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# TODO write forget password view
+class ForgotPassWordAPIView(generics.UpdateAPIView):
+    pass
+
+
+# TODO resend activation token
+class ResendActivationTokenAPIView(generics.GenericAPIView):
+    pass

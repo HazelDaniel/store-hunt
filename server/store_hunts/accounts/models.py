@@ -18,6 +18,8 @@ from .utils import validate_phone_number
 
 # Create your models here.
 
+AUTH_PROVIDER_DEFAULT = {"email": "email", "google": "google"}
+
 
 class UserBaseManager(BaseUserManager):
     def create_user(
@@ -68,6 +70,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active: bool = models.BooleanField(default=False)
     is_seller: bool = models.BooleanField(default=False)
     staff: bool = models.BooleanField(default=False)
+    auth_provider = models.CharField(
+        max_length=50, default=AUTH_PROVIDER_DEFAULT["email"]
+    )
     USERNAME_FIELD: str = "email"
     REQUIRED_FIELDS: list[str] = ["first_name", "last_name"]
 
