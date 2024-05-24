@@ -1,7 +1,8 @@
 # Store Hunt
 
-Inspiration and Purpose 🎨✨
-Store-Hunts was born out of a spark of inspiration from a dear friend who is a passionate fashion enthusiast. 👗👠 With a dream to create a vibrant platform that connects talented fashion designers with style seekers around the world, we embarked on this exciting journey. My friend's unwavering dedication to fashion and the creative community inspired me to build this API, providing the essential backbone for a seamless and engaging user experience on the Store-Hunts frontend.
+### Inspiration and Purpose 🎨✨
+
+Store-Hunts was born out of a spark of inspiration from a dear friend [Hazel Daniel](https://github.com/HazelDaniel)who is a passionate fashion enthusiast. 👗👠 With a dream to create a vibrant platform that connects talented fashion designers with style seekers around the world, we embarked on this exciting journey. My friend's unwavering dedication to fashion and the creative community inspired me to build this API, providing the essential backbone for a seamless and engaging user experience on the Store-Hunts frontend.
 
 Our Vision 🚀💡
 At Store-Hunts, we aim to revolutionize the way fashion designers and consumers connect, collaborate, and create. This API is designed to be the powerhouse behind a platform that fosters creativity, supports emerging talent, and makes high-quality fashion accessible to everyone. 🌍✨
