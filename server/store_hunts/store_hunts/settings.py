@@ -115,17 +115,19 @@ WSGI_APPLICATION = "store_hunts.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 # print(os.environ.get('DATABASE_URL'))
 
-DATABASES = {"default": dj_database_url.config(default=os.environ.get("DATABASE_URL"))}
+if not DEBUG:
+    DATABASES = {"default": dj_database_url.config(default=os.environ.get("DATABASE_URL"))}
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": DB,
-#         "USER": DBUSER,
-#         "PASSWORD": PASSWORD,
-#         "PORT": PORT,
-#     }
-# }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": DB,
+            "USER": DBUSER,
+            "PASSWORD": PASSWORD,
+            "PORT": PORT,
+        }
+    }
 
 
 # Password validation
@@ -187,9 +189,18 @@ PASSWORD_HASHERS = [
 
 
 EMAIL_BACKEND = "django_mailgun_mime.backends.MailgunMIMEBackend"
-MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")
-MAILGUN_DOMAIN_NAME = "mg.velolend.me"
-EMAIL_HOST_USER = "storehunt@mg.velolend.me"
+
+if not DEBUG:
+    MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")
+    MAILGUN_DOMAIN_NAME = "mg.velolend.me"
+    EMAIL_HOST_USER = "storehunt@mg.velolend.me"
+
+else:
+    # mailhog setting for production
+    EMAIL_HOST = 'localhost'
+    EMAIL_PORT = 1025
+    EMAIL_HOST_USER = 'storehunt@store.com'
+    
 SITE_ID = 1
 
 # rest_framework default settings
