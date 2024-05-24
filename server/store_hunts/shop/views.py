@@ -71,7 +71,7 @@ class EditReviewRatingProductAPIView(generics.UpdateAPIView):
     ]
     queryset = Review.objects.all()
     lookup_field = "hash_id"
-    http_method_names = ['put']
+    http_method_names = ["put"]
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -89,9 +89,7 @@ class EditReviewRatingProductAPIView(generics.UpdateAPIView):
 
     def get_queryset(self):
         review_id = self.kwargs["hash_id"]
-        review = Review.objects.filter(
-            review_hash_id=review_id, user=self.request.user
-        )
+        review = Review.objects.filter(review_hash_id=review_id, user=self.request.user)
         return review
 
 
@@ -99,22 +97,21 @@ class DeleteReviewRating(generics.DestroyAPIView):
     serializer_class = DeleteReviewRating
     permission_classes = [permissions.IsAuthenticated, UserNotProductOwnerPermission]
     queryset = Review.objects.all()
-    lookup_field = 'hash_id'
-    
-    
+    lookup_field = "hash_id"
+
     def destroy(self, request, *args, **kwargs):
         # review_id = self.kwargs.get("hash_id")
         # instance = get_object_or_404(Review, hash_id=review_id)
         instance = self.get_object()
         rating = get_object_or_404(Rating, review=instance)
-        
+
         self.perform_destroy(instance)
         self.perform_destroy(rating)
         return Response({}, status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         user = self.request.user
-        review_id = self.kwargs['hash_id']
+        review_id = self.kwargs["hash_id"]
         review = Review.objects.filter(user=user, hash_id=review_id)
         return super().get_queryset()
 

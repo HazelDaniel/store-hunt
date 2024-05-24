@@ -35,10 +35,13 @@ DEBUG = os.environ.get("DEBUG") == "1"
 
 ALLOWED_HOSTS = []
 if DEBUG:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', ]
+    ALLOWED_HOSTS = [
+        "localhost",
+        "127.0.0.1",
+    ]
 
 else:
-    ALLOWED_HOSTS = ['store-hunt-1.onrender.com']
+    ALLOWED_HOSTS = ["store-hunt-1.onrender.com"]
 
 # Application definition
 
@@ -58,14 +61,14 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "django_filters",
-    # social auth setup
-    # internal applications
+    # aws s3
+    "storages",
+    # internal app
     "accounts",
     "products",
     "shop",
     "cart",
-    # aws s3
-    "storages",
+    "social_auth",
 ]
 
 # handle force text error
@@ -76,7 +79,7 @@ django.utils.encoding.force_text = force_str
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -112,19 +115,19 @@ WSGI_APPLICATION = "store_hunts.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 # print(os.environ.get('DATABASE_URL'))
 
-DATABASES = {
-    "default": dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-}
+if not DEBUG:
+    DATABASES = {"default": dj_database_url.config(default=os.environ.get("DATABASE_URL"))}
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": DB,
-#         "USER": DBUSER,
-#         "PASSWORD": PASSWORD,
-#         "PORT": PORT,
-#     }
-# }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": DB,
+            "USER": DBUSER,
+            "PASSWORD": PASSWORD,
+            "PORT": PORT,
+        }
+    }
 
 
 # Password validation
@@ -186,9 +189,18 @@ PASSWORD_HASHERS = [
 
 
 EMAIL_BACKEND = "django_mailgun_mime.backends.MailgunMIMEBackend"
-MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")
-MAILGUN_DOMAIN_NAME = "mg.velolend.me"
-EMAIL_HOST_USER = "storehunt@mg.velolend.me"
+
+if not DEBUG:
+    MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")
+    MAILGUN_DOMAIN_NAME = "mg.velolend.me"
+    EMAIL_HOST_USER = "storehunt@mg.velolend.me"
+
+else:
+    # mailhog setting for production
+    EMAIL_HOST = 'localhost'
+    EMAIL_PORT = 1025
+    EMAIL_HOST_USER = 'storehunt@store.com'
+    
 SITE_ID = 1
 
 # rest_framework default settings
@@ -196,8 +208,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
@@ -270,8 +282,11 @@ else:
     # STATIC_URL = "/staticfiles/"
     # STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
     STATIC_URL = "/static/"
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-    # Enable the WhiteNoise storage backend, which compresses static files to reduce disk use
-    # and renames the files with unique names for each version to support long-term caching
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
     STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# Google oauth setting
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+GOOGLE__CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+SOCIAL_AUTH_PASSWORD = os.environ.get("SOCIAL_AUTH_PASSWORD")

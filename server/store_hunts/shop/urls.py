@@ -19,8 +19,9 @@ urlpatterns = [
         name="edit-review",
     ),
     path(
-        'review-rating/delete/<slug:hash_id>/product',
-        views.DeleteReviewRating.as_view(), name='delete-review-rating'
+        "review-rating/delete/<slug:hash_id>/product",
+        views.DeleteReviewRating.as_view(),
+        name="delete-review-rating",
     ),
     path("shop", views.ListProduct.as_view(), name="list-product"),
     path(

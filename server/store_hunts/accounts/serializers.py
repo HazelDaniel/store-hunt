@@ -67,15 +67,6 @@ class SellerRegistrationSerializer(UserRegistrationSerializer):
             "password",
             "confirm_password",
         ]
-        # extra_kwargs = {"password": {"write_only": True, "required": True}}
-
-    # def validate(self, data: dict) -> dict:
-    #     key = "user"
-    #     if data[key]["password"] != data[key]["confirm_password"]:
-    #         raise serializers.ValidationError(
-    #             "confirm password must be the same as password"
-    #         )
-    #     return data
 
 
 class UserLoginSerializer(serializers.Serializer):

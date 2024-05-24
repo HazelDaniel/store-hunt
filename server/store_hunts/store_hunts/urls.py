@@ -14,6 +14,7 @@ urlpatterns = [
     path("api/v1/", include("products.urls")),
     path("api/v1/", include("shop.urls")),
     path("api/v1/", include("cart.urls")),
+    path("api/v1/", include('social_auth.urls')),
     # swagger doc urls
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     # Optional UI:
@@ -31,4 +32,4 @@ urlpatterns = [
 
 # if settings.DEBUG:
 #     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    # urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+# urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
